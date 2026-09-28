@@ -113,24 +113,15 @@ body{
 <script type="module">
 
 // 🔥 FIREBASE
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { db } from "./app.js";
+
 import {
-  getFirestore,
   collection,
   getDocs,
   addDoc,
   onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
-  authDomain: "ruzgarguluqr.firebaseapp.com",
-  projectId: "ruzgarguluqr"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 // 🔐 MASA KONTROL
 const masa = new URLSearchParams(location.search).get("table");
