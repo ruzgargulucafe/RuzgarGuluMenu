@@ -148,7 +148,11 @@ async function loadMenu(){
     html += `
       <div class="card">
         <b>${p.name}</b><br>
+
+        <p>${p.description || ""}</p>
+        
         <span>${p.price}₺</span>
+        
         <button onclick="ekle('${d.id}','${p.name}',${p.price})">
           Sepete Ekle
         </button>
