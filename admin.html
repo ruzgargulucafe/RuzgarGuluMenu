@@ -105,7 +105,9 @@ const qr=`menu.html?table=${t.name}`;
 h+=`
 <div class="card">
 <b>${t.name}</b><br>
-<a target="_blank" href="${qr}">QR Aç</a><br>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qr}">
+<br>
+<a target="_blank" href="${qr}">Menüyü Aç</a>
 <button onclick="silMasa('${d.id}')">Sil</button>
 </div>`;
 });
