@@ -1,11 +1,4 @@
-const sifre = "Rüzgar2026"; //
-
-const giris = prompt("Admin şifresi gir:");
-
-if(giris !== sifre){
-  alert("Yanlış şifre");
-  location.href = "index.html";
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -41,6 +34,14 @@ body{margin:0;font-family:Arial;display:flex;background:#f4f6f9}
 
 <script type="module">
 
+  const sifre = "Rüzgar2026"; //
+
+const giris = prompt("Admin şifresi gir:");
+
+if(giris !== sifre){
+  alert("Yanlış şifre");
+  location.href = "index.html";
+}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,
