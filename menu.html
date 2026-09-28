@@ -200,11 +200,13 @@ window.siparis = async ()=>{
   sepet.forEach(i=> total += i.price*i.qty);
 
   await addDoc(collection(db,"orders"),{
-    table: masa,
-    items: sepet,
-    total: total,
-    createdAt: serverTimestamp()
-  });
+  table: masa,
+  items: sepet,
+  total: total,
+  status: "Bekliyor",   // ✅ EKLENDİ
+  closed: false,        // ✅ EKLENDİ
+  createdAt: serverTimestamp()
+});
 
   alert("Sipariş gönderildi");
 
@@ -244,9 +246,9 @@ function hesapYukle(){
 
       const o = d.data();
 
-      if(o.table !== masa) return;
+      if(o.table !== masa || o.closed) return;
 
-      o.items.forEach(i=>{
+      (o.items || []).forEach(i=>{
         html += `${i.name} x${i.qty}<br>`;
         total += i.price * i.qty;
       });
