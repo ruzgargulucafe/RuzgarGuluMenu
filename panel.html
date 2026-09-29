@@ -155,13 +155,18 @@ snap.forEach(d=>{
 
   // HAZIRLANAN
   if(o.status=="Hazır"){
-    readyHTML += `
-    <div class="card">
-      <b>${o.table}</b><br>
-      ${o.total}₺
-    </div>
-    `;
-  }
+
+  readyHTML += `
+  <div class="card">
+    <b>${o.table}</b><br>
+
+    ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
+
+    <br><b>${o.total}₺</b>
+    <div style="color:lime;">✔ Hazır</div>
+  </div>
+  `;
+}
 
 });
 
