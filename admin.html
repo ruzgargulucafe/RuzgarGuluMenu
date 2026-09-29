@@ -258,33 +258,102 @@ window.silBill=async(id)=>{
 await deleteDoc(doc(db,"billRequests",id));
 };
 
-// ================= CİRO =================
-async function ciro(){
+// ================= CİRO (GELİŞMİŞ) =================
+function ciro(){
 
-let daily=0;
-let monthly=0;
+onSnapshot(collection(db,"orders"), snap=>{
 
-const snap=await getDocs(collection(db,"orders"));
+let gunluk=0;
+let haftalik=0;
+let aylik=0;
 
-const today=new Date().toDateString();
-const month=new Date().getMonth();
+let nakit=0;
+let kart=0;
+
+let saatlik = {};
+
+const now = new Date();
 
 snap.forEach(d=>{
+
 const o=d.data();
-if(!o.createdAt) return;
 
-const t=new Date(o.createdAt.seconds*1000);
+if(!o.closed || !o.paidAt) return;
 
-if(t.toDateString()==today) daily+=o.total;
-if(t.getMonth()==month) monthly+=o.total;
-});
+let tarih;
 
-document.getElementById("app").innerHTML=`
-<h3>Günlük: ${daily}₺</h3>
-<h3>Aylık: ${monthly}₺</h3>
-`;
+try{
+  tarih = o.paidAt.toDate();
+}catch{
+  return;
 }
 
+// 📅 GÜNLÜK
+if(
+  tarih.getDate() === now.getDate() &&
+  tarih.getMonth() === now.getMonth() &&
+  tarih.getFullYear() === now.getFullYear()
+){
+  gunluk += o.total || 0;
+}
+
+// 📅 HAFTALIK (son 7 gün)
+const fark = (now - tarih) / (1000*60*60*24);
+if(fark <= 7){
+  haftalik += o.total || 0;
+}
+
+// 📅 AYLIK
+if(
+  tarih.getMonth() === now.getMonth() &&
+  tarih.getFullYear() === now.getFullYear()
+){
+  aylik += o.total || 0;
+}
+
+// 💳 ÖDEME TİPİ
+if(o.paymentType === "Nakit") nakit += o.total || 0;
+if(o.paymentType === "Kart") kart += o.total || 0;
+
+// ⏰ SAATLİK
+const saat = tarih.getHours();
+if(!saatlik[saat]) saatlik[saat]=0;
+saatlik[saat]+= o.total || 0;
+
+});
+
+// ================= HTML =================
+
+let saatHTML="";
+for(let i=0;i<24;i++){
+saatHTML += `
+<div class="card">
+${i}:00 → ${saatlik[i] || 0}₺
+</div>`;
+}
+
+document.getElementById("app").innerHTML=`
+
+<div class="card">
+<h3>💰 Ciro</h3>
+Günlük: ${gunluk}₺<br>
+Haftalık: ${haftalik}₺<br>
+Aylık: ${aylik}₺<br><br>
+
+💵 Nakit: ${nakit}₺<br>
+💳 Kart: ${kart}₺<br><br>
+
+<b>Toplam: ${nakit+kart}₺</b>
+</div>
+
+<h3>⏰ Saatlik Satış</h3>
+${saatHTML}
+
+`;
+
+});
+
+}
 // START
 page("masa");
 
