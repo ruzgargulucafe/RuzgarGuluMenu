@@ -280,10 +280,24 @@ h+=`
 </div>
 
 <div id="edit_${d.id}" style="display:none">
-  <input id="ad_${d.id}" value="${p.name}">
-  <input id="fiyat_${d.id}" value="${p.price}">
+
+  <input id="ad_${d.id}" value="${p.name}"><br>
+
+  <input id="fiyat_${d.id}" value="${p.price}"><br>
+
+  <select id="kat_${d.id}">
+    ${Object.keys(kategoriMap).map(kid=>`
+      <option value="${kid}" ${p.categoryId===kid?"selected":""}>
+        ${kategoriMap[kid]}
+      </option>
+    `).join("")}
+  </select><br>
+
+  <input type="file" id="resim_${d.id}" accept="image/*"><br>
+
   <button onclick="guncelleUrun('${d.id}')">Kaydet</button>
   <button onclick="iptalUrun('${d.id}')">İptal</button>
+
 </div>
 
 </div>`;
@@ -350,20 +364,46 @@ window.iptalUrun = (id)=>{
 // 💾 GÜNCELLE
 window.guncelleUrun = async(id)=>{
 
-  const yeniAd = document.getElementById("ad_"+id).value.trim();
-  const yeniFiyat = Number(document.getElementById("fiyat_"+id).value);
+try{
 
-  if(yeniAd==="" || !yeniFiyat){
-    alert("Eksik bilgi");
-    return;
-  }
+const ad = document.getElementById("ad_"+id).value.trim();
+const fiyat = Number(document.getElementById("fiyat_"+id).value);
+const kategoriId = document.getElementById("kat_"+id).value;
+const file = document.getElementById("resim_"+id).files[0];
 
-  await updateDoc(doc(db,"products",id),{
-    name: yeniAd,
-    price: yeniFiyat
-  });
+if(!ad || !fiyat){
+  alert("Eksik bilgi");
+  return;
+}
 
-  urun(); // listeyi yenile
+let updateData = {
+  name: ad,
+  price: fiyat,
+  categoryId: kategoriId
+};
+
+// 📸 FOTOĞRAF DEĞİŞTİRME
+if(file){
+  const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
+
+  await uploadBytes(fileRef, file);
+  const url = await getDownloadURL(fileRef);
+
+  updateData.image = url;
+}
+
+// 🔥 FIRESTORE UPDATE
+await updateDoc(doc(db,"products",id), updateData);
+
+alert("Güncellendi ✅");
+
+urun();
+
+}catch(e){
+  console.error(e);
+  alert("Hata: " + e.message);
+}
+
 };
 
 // ================= SİPARİŞ =================
