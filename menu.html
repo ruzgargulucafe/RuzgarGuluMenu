@@ -228,8 +228,31 @@ window.garson = async ()=>{
 
 // 💳 HESAP İSTE
 window.hesap = async ()=>{
+
+  // 🔥 MASANIN TÜM SİPARİŞLERİNİ TOPLA
+  const snap = await getDocs(collection(db,"orders"));
+
+  let total = 0;
+  let items = [];
+
+  snap.forEach(d=>{
+    const o = d.data();
+
+    if(o.table === masa && !o.closed){
+
+      total += o.total || 0;
+
+      (o.items || []).forEach(i=>{
+        items.push(i.name + " x" + i.qty);
+      });
+
+    }
+  });
+
   await addDoc(collection(db,"billRequests"),{
     table: masa,
+    total: total,
+    items: items,
     createdAt: serverTimestamp()
   });
 
