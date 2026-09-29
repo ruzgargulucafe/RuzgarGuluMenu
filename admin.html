@@ -257,8 +257,6 @@ katSnap.forEach(d=>{
 
 document.getElementById("kategoriSec").innerHTML = katHTML;
 
-  const katSnap = await getDocs(collection(db,"categories"));
-
 let kategoriMap = {};
 
 katSnap.forEach(d=>{
@@ -275,7 +273,7 @@ h+=`
 
 <div id="view_${d.id}">
   <b>${p.name}</b><br>
-<small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small>
+<small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
   ${p.price}₺<br>
   <button onclick="duzenleUrunAc('${d.id}','${p.name}',${p.price})">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
@@ -301,6 +299,11 @@ const price = Number(document.getElementById("f").value);
 const file = document.getElementById("resimFile").files[0];
 const kdv = Number(document.getElementById("kdv").value);
 const kategoriId = document.getElementById("kategoriSec").value;
+
+  if(!kategoriId){
+  alert("Kategori seç");
+  return;
+}
   
 if(name === "" || !price) return alert("Eksik bilgi");
 
