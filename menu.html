@@ -139,26 +139,50 @@ let sepet = [];
 
 // 🔥 MENÜ YÜKLE
 async function loadMenu(){
-  const snap = await getDocs(collection(db,"products"));
+  // 🔥 TÜM VERİLERİ ÇEK
+const urunSnap = await getDocs(collection(db,"products"));
+const katSnap = await getDocs(collection(db,"categories"));
 
-  let html = "";
+// 🔥 KATEGORİLERİ HAZIRLA
+let kategoriler = {};
 
-  snap.forEach(d=>{
-    const p = d.data();
+katSnap.forEach(d=>{
+  kategoriler[d.id] = {
+    name: d.data().name,
+    items: []
+  };
+});
 
+// 🔥 ÜRÜNLERİ KATEGORİYE DAĞIT
+urunSnap.forEach(d=>{
+  const p = d.data();
+
+  if(p.categoryId && kategoriler[p.categoryId]){
+    kategoriler[p.categoryId].items.push(p);
+  }
+});
+
+// 🔥 HTML OLUŞTUR
+let html = "";
+
+Object.values(kategoriler).forEach(k=>{
+
+  if(k.items.length === 0) return;
+
+  html += `<h2>${k.name}</h2>`;
+
+  k.items.forEach(p=>{
     html += `
-      <div class="card">
-        <b>${p.name}</b><br>
-        <p>${p.description || ""}</p>
-        <span>${p.price}₺</span>
-        <button onclick="ekle('${d.id}','${p.name}',${p.price})">
-          Sepete Ekle
-        </button>
-      </div>
+    <div class="card">
+      <b>${p.name}</b><br>
+      ${p.price}₺
+    </div>
     `;
   });
 
-  document.getElementById("menu").innerHTML = html;
+});
+
+document.getElementById("menu").innerHTML = html;
 }
 
 // ➕ SEPET
