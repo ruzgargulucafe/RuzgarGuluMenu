@@ -284,18 +284,6 @@ if(file){
 await addDoc(collection(db,"products"),{
   name: name,
   price: price,
-  kdv: kdv,
-  description: document.getElementById("aciklama").value,
-  image: imageURL
-});
-
-urun();
-};
-
-// 🔥 FIRESTORE'A KAYDET
-await addDoc(collection(db,"products"),{
-  name: name,
-  price: price,
   kdv: kdv;
   description: document.getElementById("aciklama").value,
   image: imageURL
