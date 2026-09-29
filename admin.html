@@ -317,17 +317,25 @@ window.silBill=async(id)=>{
 await deleteDoc(doc(db,"billRequests",id));
 };
 
-// ================= CİRO (GELİŞMİŞ) =================
+// ================= CİRO (FULL GELİŞMİŞ) =================
+
+let unsubCiro = null;
+
 function ciro(){
 
-onSnapshot(collection(db,"orders"), snap=>{
+// önce eski listener varsa kapat (çok önemli)
+if(unsubCiro) unsubCiro();
 
-let gunluk=0;
-let haftalik=0;
-let aylik=0;
+unsubCiro = onSnapshot(collection(db,"orders"), snap=>{
 
-let nakit=0;
-let kart=0;
+let gunluk = 0;
+let haftalik = 0;
+let aylik = 0;
+
+let nakit = 0;
+let kart = 0;
+
+let toplam = 0;
 
 let saatlik = {};
 
@@ -335,74 +343,84 @@ const now = new Date();
 
 snap.forEach(d=>{
 
-const o=d.data();
+  const o = d.data();
 
-if(!o.closed || !o.paidAt) return;
+  if(!o || !o.closed || !o.paidAt) return;
 
-let tarih;
+  let tarih;
 
-try{
-  tarih = o.paidAt.toDate();
-}catch{
-  return;
-}
+  try{
+    tarih = o.paidAt.toDate();
+  }catch{
+    return;
+  }
 
-// 📅 GÜNLÜK
-if(
-  tarih.getDate() === now.getDate() &&
-  tarih.getMonth() === now.getMonth() &&
-  tarih.getFullYear() === now.getFullYear()
-){
-  gunluk += o.total || 0;
-}
+  // ================= GÜNLÜK =================
+  if(
+    tarih.getDate() === now.getDate() &&
+    tarih.getMonth() === now.getMonth() &&
+    tarih.getFullYear() === now.getFullYear()
+  ){
+    gunluk += o.total || 0;
+  }
 
-// 📅 HAFTALIK (son 7 gün)
-const fark = (now - tarih) / (1000*60*60*24);
-if(fark <= 7){
-  haftalik += o.total || 0;
-}
+  // ================= HAFTALIK (son 7 gün) =================
+  const fark = (now - tarih) / (1000*60*60*24);
 
-// 📅 AYLIK
-if(
-  tarih.getMonth() === now.getMonth() &&
-  tarih.getFullYear() === now.getFullYear()
-){
-  aylik += o.total || 0;
-}
+  if(fark >= 0 && fark <= 7){
+    haftalik += o.total || 0;
+  }
 
-// 💳 ÖDEME TİPİ
-if(o.paymentType === "Nakit") nakit += o.total || 0;
-if(o.paymentType === "Kart") kart += o.total || 0;
+  // ================= AYLIK =================
+  if(
+    tarih.getMonth() === now.getMonth() &&
+    tarih.getFullYear() === now.getFullYear()
+  ){
+    aylik += o.total || 0;
+  }
 
-// ⏰ SAATLİK
-const saat = tarih.getHours();
-if(!saatlik[saat]) saatlik[saat]=0;
-saatlik[saat]+= o.total || 0;
+  // ================= TOPLAM =================
+  toplam += o.total || 0;
+
+  // ================= ÖDEME =================
+  if(o.paymentType === "Nakit") nakit += o.total || 0;
+  if(o.paymentType === "Kart") kart += o.total || 0;
+
+  // ================= SAATLİK =================
+  const saat = tarih.getHours();
+
+  if(!saatlik[saat]) saatlik[saat] = 0;
+
+  saatlik[saat] += o.total || 0;
 
 });
 
-// ================= HTML =================
 
-let saatHTML="";
-for(let i=0;i<24;i++){
-saatHTML += `
-<div class="card">
-${i}:00 → ${saatlik[i] || 0}₺
-</div>`;
+// ================= SAATLİK HTML =================
+let saatHTML = "";
+
+for(let i=0; i<24; i++){
+  saatHTML += `
+  <div class="card">
+    ${i.toString().padStart(2,"0")}:00 → ${saatlik[i] || 0}₺
+  </div>`;
 }
 
-document.getElementById("app").innerHTML=`
+
+// ================= EKRANA BAS =================
+document.getElementById("app").innerHTML = `
 
 <div class="card">
-<h3>💰 Ciro</h3>
-Günlük: ${gunluk}₺<br>
-Haftalık: ${haftalik}₺<br>
-Aylık: ${aylik}₺<br><br>
+<h3>💰 Ciro Raporu</h3>
+
+Günlük: <b>${gunluk}₺</b><br>
+Haftalık: <b>${haftalik}₺</b><br>
+Aylık: <b>${aylik}₺</b><br><br>
 
 💵 Nakit: ${nakit}₺<br>
 💳 Kart: ${kart}₺<br><br>
 
-<b>Toplam: ${nakit+kart}₺</b>
+<b>Toplam: ${toplam}₺</b>
 </div>
 
 <h3>⏰ Saatlik Satış</h3>
@@ -411,7 +429,6 @@ ${saatHTML}
 `;
 
 });
-
 }
 // START
 page("masa");
