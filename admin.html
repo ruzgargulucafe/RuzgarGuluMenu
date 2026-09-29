@@ -114,7 +114,7 @@ const firebaseConfig = {
 // 🚀 INIT
 const appF = initializeApp(firebaseConfig);
 const db = getFirestore(appF);
-
+const storage = getStorage(appF);
 // SAYFA
 window.page = (p)=>{
 document.getElementById("title").innerText = p.toUpperCase();
@@ -265,6 +265,7 @@ window.ekleUrun = async()=>{
 const name = document.getElementById("u").value.trim();
 const price = Number(document.getElementById("f").value);
 const file = document.getElementById("resimFile").files[0];
+const kdv = Number(document.getElementById("kdv").value);
 
 if(name === "" || !price) return alert("Eksik bilgi");
 
@@ -272,14 +273,24 @@ let imageURL = "";
 
 // 📸 FOTO YÜKLE
 if(file){
+  const storage = getStorage(); // 🔥 eksikti
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
 
   await uploadBytes(fileRef, file);
-
   imageURL = await getDownloadURL(fileRef);
-  
-  const kdv = Number(document.getElementById("kdv").value);
 }
+
+// 🔥 FIRESTORE'A KAYDET
+await addDoc(collection(db,"products"),{
+  name: name,
+  price: price,
+  kdv: kdv,
+  description: document.getElementById("aciklama").value,
+  image: imageURL
+});
+
+urun();
+};
 
 // 🔥 FIRESTORE'A KAYDET
 await addDoc(collection(db,"products"),{
