@@ -20,6 +20,10 @@ body{
   text-align:center;
 }
 
+h1{
+  margin-bottom:30px;
+}
+
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -33,12 +37,20 @@ body{
   color:white;
   font-weight:bold;
   font-size:18px;
+  text-align:center;
 }
 
 .menu{ background:#28a745; }
-.garson{ background:#ff9800; }
-.mutfak{ background:#dc3545; }
+.panel{ background:#ff9800; }
 .admin{ background:#1976d2; }
+
+a{
+  text-decoration:none;
+}
+
+.card:hover{
+  opacity:0.9;
+}
 </style>
 </head>
 
@@ -54,12 +66,8 @@ body{
   <div class="card menu">🍽 Menü</div>
 </a>
 
-<a href="waiter.html">
-  <div class="card garson">🛎 Garson</div>
-</a>
-
-<a href="kitchen.html">
-  <div class="card mutfak">👨‍🍳 Mutfak</div>
+<a href="panel.html">
+  <div class="card panel">🔥 Panel</div>
 </a>
 
 <a href="admin.html">
