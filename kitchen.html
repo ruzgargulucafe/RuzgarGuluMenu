@@ -1,175 +1,128 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Mutfak Ekranı</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mutfak Paneli</title>
 
 <style>
-
 body{
-  background:#202124;
-  color:white;
   font-family:Arial;
-  margin:0;
+  background:#222;
+  color:#fff;
   padding:20px;
 }
 
 h1{
   text-align:center;
-  margin-bottom:30px;
 }
 
-/* LİSTE */
-#orders{
-  display:flex;
-  flex-direction:column;
-  gap:20px;
-}
-
-/* KART */
 .card{
-  background:#2d2f31;
-  border-radius:15px;
-  padding:20px;
-  border-left:8px solid orange;
-}
-
-/* DURUMLAR */
-.card.yeni { border-left:8px solid red; }
-.card.hazirlaniyor { border-left:8px solid orange; }
-.card.hazir { border-left:8px solid green; }
-
-/* ÜRÜNLER */
-.item{
-  padding:5px 0;
-  border-bottom:1px solid #444;
-}
-
-/* BUTON */
-button{
-  width:100%;
-  padding:16px;
-  font-size:18px;
-  border:none;
+  background:#333;
+  padding:15px;
+  margin:10px 0;
   border-radius:10px;
+}
+
+button{
+  padding:10px;
   margin-top:10px;
+  border:none;
+  border-radius:6px;
   cursor:pointer;
-  background:#00a651;
-  color:white;
-}
-
-button.secondary{
-  background:#ff9800;
-}
-
-button.done{
   background:#28a745;
+  color:white;
+  width:100%;
+  font-weight:bold;
 }
 
+.empty{
+  text-align:center;
+  margin-top:50px;
+  opacity:0.6;
+}
 </style>
-
 </head>
 
 <body>
 
-<h1>🍳 MUTFAK EKRANI</h1>
+<h1>👨‍🍳 Mutfak Siparişleri</h1>
 
 <div id="orders"></div>
 
 <script type="module">
 
-import { db } from "./app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot, updateDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-  collection,
-  onSnapshot,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// 🔥 Firebase config (SENİN PROJE)
+const firebaseConfig = {
+  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
+  authDomain: "ruzgarguluqr.firebaseapp.com",
+  projectId: "ruzgarguluqr"
+};
 
-// =========================
-// SİPARİŞLERİ ÇEK
-// =========================
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const ordersDiv = document.getElementById("orders");
+// 🔊 SES
+const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 
-onSnapshot(collection(db,"orders"), (snapshot)=>{
+// önceki sipariş sayısı
+let lastCount = 0;
 
-  ordersDiv.innerHTML = "";
+// 🔥 SİPARİŞLERİ CANLI DİNLE
+onSnapshot(collection(db,"orders"), (snap)=>{
 
-  snapshot.forEach(docSnap => {
+  let html = "";
+  let count = 0;
 
-    const o = docSnap.data();
+  snap.forEach(d=>{
 
-    if(o.closed) return; // kapalıları gösterme
+    const o = d.data();
 
-    let durum = o.status || "Bekliyor";
+    // SADECE BEKLEYENLER
+    if(o.status === "Bekliyor"){
 
-    let className = "yeni";
-    if(durum === "Hazırlanıyor") className = "hazirlaniyor";
-    if(durum === "Hazır") className = "hazir";
+      count++;
 
-    let itemsHTML = "";
+      html += `
+      <div class="card">
+        <h2>🪑 Masa ${o.table}</h2>
 
-    (o.items || []).forEach(i=>{
-      itemsHTML += `<div class="item">${i.name} x${i.qty}</div>`;
-    });
+        <div>
+          ${(o.items || []).map(i=> i.name + " x" + i.qty).join("<br>")}
+        </div>
 
-    ordersDiv.innerHTML += `
-      <div class="card ${className}">
+        <br>
+        <b>Toplam: ${o.total}₺</b>
 
-        <h2>🍽 Masa: ${o.table}</h2>
-
-        ${itemsHTML}
-
-        <h3>₺${o.total}</h3>
-
-        ${
-          durum === "Bekliyor"
-          ? `<button onclick="baslat('${docSnap.id}')">Hazırlamaya Başla</button>`
-          : ""
-        }
-
-        ${
-          durum === "Hazırlanıyor"
-          ? `<button class="secondary" onclick="hazir('${docSnap.id}')">Hazır Yap</button>`
-          : ""
-        }
-
-        ${
-          durum === "Hazır"
-          ? `<button class="done" onclick="teslim('${docSnap.id}')">Teslim Edildi</button>`
-          : ""
-        }
-
+        <button onclick="hazir('${d.id}')">
+          ✅ Hazır Yap
+        </button>
       </div>
-    `;
+      `;
+    }
+
   });
+
+  // 🔊 yeni sipariş sesi
+  if(lastCount !== 0 && count > lastCount){
+    audio.play().catch(()=>{});
+  }
+
+  lastCount = count;
+
+  document.getElementById("orders").innerHTML =
+    html || "<div class='empty'>Sipariş yok</div>";
 
 });
 
-// =========================
-// DURUM GÜNCELLE
-// =========================
-
-window.baslat = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"Hazırlanıyor"
-  });
-};
-
-window.hazir = async(id)=>{
+// ✅ HAZIR BUTONU
+window.hazir = async (id)=>{
   await updateDoc(doc(db,"orders",id),{
     status:"Hazır"
-  });
-};
-
-window.teslim = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"Teslim"
   });
 };
 
