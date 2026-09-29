@@ -382,24 +382,26 @@ if(!ad || !fiyat){
   return;
 }
 
+if(!kategoriId){
+  alert("Kategori seç");
+  return;
+}
+
 let updateData = {
   name: ad,
   price: fiyat,
-  categoryId: kategoriId
+  categoryId: kategoriId,
   kdv: kdv
 };
 
-// 📸 FOTOĞRAF DEĞİŞTİRME
+// 📸 FOTOĞRAF
 if(file){
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
-
   await uploadBytes(fileRef, file);
   const url = await getDownloadURL(fileRef);
-
   updateData.image = url;
 }
 
-// 🔥 FIRESTORE UPDATE
 await updateDoc(doc(db,"products",id), updateData);
 
 alert("Güncellendi ✅");
@@ -412,7 +414,7 @@ urun();
 }
 
 };
-
+  
 // ================= SİPARİŞ =================
 function siparis(){
 
