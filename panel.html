@@ -254,6 +254,10 @@ snap.forEach(d=>{
   <div class="card">
     <b>Masa: ${b.table}</b><br>
 
+${(b.items || []).join("<br>")}
+
+<br><b>Toplam: ${b.total || 0}₺</b>
+
     <div class="small">
       ${tarih(b.createdAt)} ${saat(b.createdAt)}
     </div>
