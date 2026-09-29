@@ -2,14 +2,16 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rüzgar Gülü Panel</title>
 
 <style>
 body{
+  margin:0;
   font-family:Arial;
   background:#111;
-  color:#fff;
-  padding:15px;
+  color:white;
+  padding:20px;
 }
 
 h1{text-align:center;}
@@ -24,34 +26,31 @@ h1{text-align:center;}
 }
 
 button{
-  width:100%;
-  padding:10px;
+  padding:8px 12px;
   margin-top:10px;
   border:none;
   border-radius:8px;
-  font-weight:bold;
   cursor:pointer;
 }
 
-.bekliyor{background:#ff9800;}
-.hazir{background:#28a745;}
-.teslim{background:#2196f3;}
-.sil{background:#dc3545;}
+.btn-hazir{background:orange;}
+.btn-teslim{background:green;color:white;}
+.btn-sil{background:red;color:white;}
 </style>
-</head>
 
+</head>
 <body>
 
 <h1>🍽 Rüzgar Gülü Panel</h1>
 
 <div class="section">
 <h2>🆕 Yeni Siparişler</h2>
-<div id="orders"></div>
+<div id="yeni"></div>
 </div>
 
 <div class="section">
 <h2>🍳 Hazırlananlar</h2>
-<div id="ready"></div>
+<div id="hazir"></div>
 </div>
 
 <div class="section">
@@ -60,165 +59,163 @@ button{
 </div>
 
 <div class="section">
-<h2>💳 Hesap İstekleri</h2>
+<h2>💰 Hesap İstekleri</h2>
 <div id="bills"></div>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
   getFirestore,
   collection,
   onSnapshot,
-  updateDoc,
-  deleteDoc,
   doc,
-  query,
-  where
+  updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 🔥 FIREBASE
 const app = initializeApp({
-  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
+  apiKey: "AIza...",
   authDomain: "ruzgarguluqr.firebaseapp.com",
   projectId: "ruzgarguluqr"
 });
 
 const db = getFirestore(app);
 
-//////////////////////////////////////////////////
-// 🆕 YENİ SİPARİŞLER
-//////////////////////////////////////////////////
+// =====================
+// SİPARİŞLER
+// =====================
 
-onSnapshot(
-  query(collection(db,"orders"), where("status","==","Bekliyor")),
-snap=>{
+onSnapshot(collection(db,"orders"), snap=>{
+
+let yeniHTML="";
+let hazirHTML="";
+
+snap.forEach(d=>{
+
+  const o = d.data();
+
+  // SADECE AKTİF SİPARİŞ
+  if(o.closed===true) return;
+
+  const items = o.items.map(i=> i.name+" x"+i.qty).join("<br>");
+
+  // YENİ
+  if(o.status=="yeni" || o.status=="Bekliyor"){
+
+    yeniHTML+=`
+    <div class="card">
+    <b>${o.table}</b><br><br>
+    ${items}
+    <br><b>${o.total}₺</b><br>
+
+    <button class="btn-hazir"
+    onclick="hazir('${d.id}')">Hazırla</button>
+    </div>
+    `;
+  }
+
+  // HAZIR
+  if(o.status=="hazır"){
+
+    hazirHTML+=`
+    <div class="card">
+    <b>${o.table}</b><br><br>
+    ${items}
+    <br><b>${o.total}₺</b><br>
+
+    <button class="btn-teslim"
+    onclick="teslim('${d.id}')">Teslim Et</button>
+    </div>
+    `;
+  }
+
+});
+
+document.getElementById("yeni").innerHTML =
+  yeniHTML || "Sipariş yok";
+
+document.getElementById("hazir").innerHTML =
+  hazirHTML || "Yok";
+
+});
+
+// =====================
+// GARSON ÇAĞRI
+// =====================
+
+onSnapshot(collection(db,"calls"), snap=>{
 
 let html="";
 
 snap.forEach(d=>{
-const o=d.data();
+  const c = d.data();
 
-if(o.closed) return;
-
-html+=`
-<div class="card">
-<h3>${o.table}</h3>
-
-${(o.items||[]).map(i=>i.name+" x"+i.qty).join("<br>")}
-
-<br><b>${o.total}₺</b>
-
-<button class="hazir" onclick="hazir('${d.id}')">
-Hazır Yap
-</button>
-</div>
-`;
+  html+=`
+  <div class="card">
+  Masa: ${c.table}
+  <button class="btn-sil"
+  onclick="silCall('${d.id}')">Temizle</button>
+  </div>
+  `;
 });
 
-document.getElementById("orders").innerHTML = html || "Sipariş yok";
+document.getElementById("calls").innerHTML =
+  html || "Yok";
 
 });
 
-//////////////////////////////////////////////////
-// 🍳 HAZIR SİPARİŞLER
-//////////////////////////////////////////////////
+// =====================
+// HESAP İSTE
+// =====================
 
-onSnapshot(
-  query(collection(db,"orders"), where("status","==","Hazır")),
-snap=>{
+onSnapshot(collection(db,"billRequests"), snap=>{
 
 let html="";
 
 snap.forEach(d=>{
-const o=d.data();
+  const b = d.data();
 
-if(o.closed) return;
-
-html+=`
-<div class="card">
-<h3>${o.table}</h3>
-
-${(o.items||[]).map(i=>i.name+" x"+i.qty).join("<br>")}
-
-<br><b>${o.total}₺</b>
-
-<button class="teslim" onclick="teslim('${d.id}')">
-Teslim Et
-</button>
-</div>
-`;
+  html+=`
+  <div class="card">
+  Masa: ${b.table}
+  <button class="btn-sil"
+  onclick="silBill('${d.id}')">Temizle</button>
+  </div>
+  `;
 });
 
-document.getElementById("ready").innerHTML = html || "Yok";
+document.getElementById("bills").innerHTML =
+  html || "Yok";
 
 });
 
-//////////////////////////////////////////////////
-// 🛎 GARSON
-//////////////////////////////////////////////////
-
-onSnapshot(collection(db,"calls"),snap=>{
-
-let html="";
-
-snap.forEach(d=>{
-html+=`
-<div class="card">
-Masa ${d.data().table}
-<button class="sil" onclick="silCall('${d.id}')">Temizle</button>
-</div>
-`;
-});
-
-document.getElementById("calls").innerHTML = html || "Yok";
-
-});
-
-//////////////////////////////////////////////////
-// 💳 HESAP
-//////////////////////////////////////////////////
-
-onSnapshot(collection(db,"billRequests"),snap=>{
-
-let html="";
-
-snap.forEach(d=>{
-html+=`
-<div class="card">
-Masa ${d.data().table}
-<button class="sil" onclick="silBill('${d.id}')">Temizle</button>
-</div>
-`;
-});
-
-document.getElementById("bills").innerHTML = html || "Yok";
-
-});
-
-//////////////////////////////////////////////////
-// ACTIONS
-//////////////////////////////////////////////////
+// =====================
+// FONKSİYONLAR
+// =====================
 
 window.hazir = async(id)=>{
-await updateDoc(doc(db,"orders",id),{
-status:"Hazır"
-});
+  await updateDoc(doc(db,"orders",id),{
+    status:"hazır"
+  });
 };
 
 window.teslim = async(id)=>{
-await updateDoc(doc(db,"orders",id),{
-status:"Teslim Edildi",
-closed:true
-});
+  await updateDoc(doc(db,"orders",id),{
+    status:"Teslim Edildi",
+    closed:true
+  });
 };
 
 window.silCall = async(id)=>{
-await deleteDoc(doc(db,"calls",id));
+  await deleteDoc(doc(db,"calls",id));
 };
 
 window.silBill = async(id)=>{
-await deleteDoc(doc(db,"billRequests",id));
+  await deleteDoc(doc(db,"billRequests",id));
 };
 
 </script>
