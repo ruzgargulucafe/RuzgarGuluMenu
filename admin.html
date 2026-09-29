@@ -15,6 +15,32 @@ body{margin:0;font-family:Arial;display:flex;background:#f4f6f9}
 .content{flex:1;padding:20px}
 .card{background:#fff;padding:15px;margin-bottom:10px;border-radius:10px}
 </style>
+  #menuBtn{
+  position:fixed;
+  top:10px;
+  left:10px;
+  z-index:999;
+  background:#111;
+  color:#fff;
+  border:none;
+  padding:10px 12px;
+  font-size:18px;
+  border-radius:6px;
+}
+
+@media(max-width:768px){
+  .sidebar{
+    position:fixed;
+    left:-240px;
+    top:0;
+    transition:0.3s;
+    z-index:998;
+  }
+
+  .sidebar.active{
+    left:0;
+  }
+}
 </head>
 
 <body>
@@ -390,6 +416,13 @@ ${saatHTML}
 // START
 page("masa");
 
+  const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+
+menuBtn.onclick = ()=>{
+  sidebar.classList.toggle("active");
+};
+  
 </script>
 
 </body>
