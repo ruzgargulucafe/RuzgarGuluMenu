@@ -7,18 +7,15 @@
 <title>Garson Paneli</title>
 
 <style>
-
 body{
     font-family: Arial;
     background:#f4f6f9;
     padding:20px;
 }
 
-h1{
-    text-align:center;
-}
+h1{text-align:center;}
 
-/* KART */
+.section{margin-top:25px;}
 
 .card{
     background:white;
@@ -28,37 +25,20 @@ h1{
     box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* BAŞLIKLAR */
-
-.section{
-    margin-top:20px;
-}
-
-/* BUTON */
-
 button{
     padding:10px;
     border:none;
     border-radius:8px;
     cursor:pointer;
     margin-top:10px;
+    width:100%;
+    font-weight:bold;
 }
 
-.btn-call{
-    background:#ff9800;
-    color:white;
-}
-
-.btn-bill{
-    background:#444;
-    color:white;
-}
-
-.btn-clear{
-    background:#dc3545;
-    color:white;
-}
-
+.btn-call{ background:#ff9800; color:white; }
+.btn-bill{ background:#444; color:white; }
+.btn-ready{ background:#28a745; color:white; }
+.btn-clear{ background:#dc3545; color:white; }
 </style>
 
 </head>
@@ -68,18 +48,22 @@ button{
 <h1>🛎 Garson Paneli</h1>
 
 <div class="section">
-    <h2>Garson Çağrıları</h2>
-    <div id="calls"></div>
+<h2>🔔 Garson Çağrıları</h2>
+<div id="calls"></div>
 </div>
 
 <div class="section">
-    <h2>Hesap İstekleri</h2>
-    <div id="bills"></div>
+<h2>💳 Hesap İstekleri</h2>
+<div id="bills"></div>
+</div>
+
+<div class="section">
+<h2>🍽 Hazır Siparişler</h2>
+<div id="readyOrders"></div>
 </div>
 
 <script type="module">
 
-// 🔥 FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -87,7 +71,10 @@ import {
   collection,
   onSnapshot,
   doc,
-  deleteDoc
+  deleteDoc,
+  updateDoc,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -99,25 +86,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// =========================
-// GARSON ÇAĞIR
-// =========================
+//////////////////////////////////////////////////
+// 🔔 GARSON ÇAĞRI
+//////////////////////////////////////////////////
 
 onSnapshot(collection(db,"calls"), snap=>{
 
   let html="";
 
   snap.forEach(d=>{
-
     const c = d.data();
 
     html += `
       <div class="card">
         <b>Masa: ${c.table}</b><br>
         Garson çağırıyor
-        <button class="btn-clear"
-        onclick="silCall('${d.id}')">
-        Temizle
+        <button class="btn-clear" onclick="silCall('${d.id}')">
+          Temizle
         </button>
       </div>
     `;
@@ -125,28 +110,25 @@ onSnapshot(collection(db,"calls"), snap=>{
 
   document.getElementById("calls").innerHTML =
     html || "Çağrı yok";
-
 });
 
-// =========================
-// HESAP İSTE
-// =========================
+//////////////////////////////////////////////////
+// 💳 HESAP İSTE
+//////////////////////////////////////////////////
 
 onSnapshot(collection(db,"billRequests"), snap=>{
 
   let html="";
 
   snap.forEach(d=>{
-
     const b = d.data();
 
     html += `
       <div class="card">
         <b>Masa: ${b.table}</b><br>
         Hesap istiyor
-        <button class="btn-clear"
-        onclick="silBill('${d.id}')">
-        Temizle
+        <button class="btn-clear" onclick="silBill('${d.id}')">
+          Temizle
         </button>
       </div>
     `;
@@ -154,12 +136,47 @@ onSnapshot(collection(db,"billRequests"), snap=>{
 
   document.getElementById("bills").innerHTML =
     html || "İstek yok";
-
 });
 
-// =========================
-// SİL
-// =========================
+//////////////////////////////////////////////////
+// 🍽 HAZIR SİPARİŞLER
+//////////////////////////////////////////////////
+
+const readyQuery = query(
+  collection(db,"orders"),
+  where("status","==","Hazır"),
+  where("closed","==",false)
+);
+
+onSnapshot(readyQuery, snap=>{
+
+  let html="";
+
+  snap.forEach(d=>{
+    const o = d.data();
+
+    html += `
+      <div class="card">
+        <b>Masa: ${o.table}</b><br>
+
+        ${(o.items || []).map(i=> i.name+" x"+i.qty).join("<br>")}
+
+        <br><b>${o.total}₺</b>
+
+        <button class="btn-ready" onclick="teslim('${d.id}')">
+          Teslim Edildi
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById("readyOrders").innerHTML =
+    html || "Hazır sipariş yok";
+});
+
+//////////////////////////////////////////////////
+// ❌ SİL
+//////////////////////////////////////////////////
 
 window.silCall = async(id)=>{
   await deleteDoc(doc(db,"calls",id));
@@ -167,6 +184,17 @@ window.silCall = async(id)=>{
 
 window.silBill = async(id)=>{
   await deleteDoc(doc(db,"billRequests",id));
+};
+
+//////////////////////////////////////////////////
+// ✅ TESLİM
+//////////////////////////////////////////////////
+
+window.teslim = async(id)=>{
+  await updateDoc(doc(db,"orders",id),{
+    status:"Teslim Edildi",
+    closed:true
+  });
 };
 
 </script>
