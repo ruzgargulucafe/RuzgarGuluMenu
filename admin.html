@@ -285,6 +285,12 @@ h+=`
 
   <input id="fiyat_${d.id}" value="${p.price}"><br>
 
+<select id="kdv_${d.id}">
+  <option value="0" ${p.kdv==0?"selected":""}>KDV Yok</option>
+  <option value="10" ${p.kdv==10?"selected":""}>%10 KDV</option>
+  <option value="20" ${p.kdv==20?"selected":""}>%20 KDV</option>
+</select><br>
+
   <select id="kat_${d.id}">
     ${Object.keys(kategoriMap).map(kid=>`
       <option value="${kid}" ${p.categoryId===kid?"selected":""}>
@@ -369,6 +375,7 @@ try{
 const ad = document.getElementById("ad_"+id).value.trim();
 const fiyat = Number(document.getElementById("fiyat_"+id).value);
 const kategoriId = document.getElementById("kat_"+id).value;
+const kdv = Number(document.getElementById("kdv_"+id).value);
 const file = document.getElementById("resim_"+id).files[0];
 
 if(!ad || !fiyat){
@@ -380,6 +387,7 @@ let updateData = {
   name: ad,
   price: fiyat,
   categoryId: kategoriId
+  kdv: kdv
 };
 
 // 📸 FOTOĞRAF DEĞİŞTİRME
