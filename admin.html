@@ -85,29 +85,33 @@ window.logout = ()=>{
 
 // 🔥 FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc,
-onSnapshot
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  import {
+import {
   getStorage,
   ref,
   uploadBytes,
   getDownloadURL
-    
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// 🔑 CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
   authDomain: "ruzgarguluqr.firebaseapp.com",
-  projectId: "ruzgarguluqr"
+  projectId: "ruzgarguluqr",
+  storageBucket: "ruzgarguluqr.appspot.com" // ⚠️ BUNU EKLEDİK
 };
 
+// 🚀 INIT
 const appF = initializeApp(firebaseConfig);
 const db = getFirestore(appF);
 const storage = getStorage(appF);
