@@ -241,10 +241,22 @@ document.getElementById("app").innerHTML=`
   <option value="10">%10 KDV</option>
   <option value="20">%20 KDV</option>
 </select>
+<select id="kategoriSec"></select>
 <button onclick="ekleUrun()">Ekle</button>
 <div id="list"></div>
 `;
+// 🔥 KATEGORİLERİ ÇEK
+const katSnap = await getDocs(collection(db,"categories"));
 
+let katHTML = `<option value="">Kategori seç</option>`;
+
+katSnap.forEach(d=>{
+  const k = d.data();
+  katHTML += `<option value="${d.id}">${k.name}</option>`;
+});
+
+document.getElementById("kategoriSec").innerHTML = katHTML;
+  
 const snap=await getDocs(collection(db,"products"));
 let h="";
 
@@ -255,6 +267,7 @@ h+=`
 
 <div id="view_${d.id}">
   <b>${p.name}</b><br>
+<small>Kategori: ${p.categoryId || "-"}</small><br>
   ${p.price}₺<br>
   <button onclick="duzenleUrunAc('${d.id}','${p.name}',${p.price})">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
@@ -298,6 +311,7 @@ await addDoc(collection(db,"products"),{
   name: name,
   price: price,
   kdv: kdv,
+  categoryId: kategoriId,
   description: document.getElementById("aciklama").value,
   image: imageURL
 });
