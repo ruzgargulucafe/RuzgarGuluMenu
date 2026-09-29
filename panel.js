@@ -231,19 +231,23 @@ onSnapshot(collection(db,"orders"), snap=>{
   let nakit = 0;
   let kart = 0;
 
-  const today = new Date().toDateString();
+  const today = new Date();
 
   snap.forEach(d=>{
 
     const o = d.data();
 
-    if(!o.closed) return; // sadece ödenmişler
-
+    if(!o.closed) return;
     if(!o.paidAt) return;
 
-    const tarih = new Date(o.paidAt).toDateString();
+    // 🔥 BURASI KRİTİK
+    const tarih = o.paidAt.toDate();
 
-    if(tarih === today){
+    if(
+      tarih.getDate() === today.getDate() &&
+      tarih.getMonth() === today.getMonth() &&
+      tarih.getFullYear() === today.getFullYear()
+    ){
 
       toplam += o.total || 0;
 
