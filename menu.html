@@ -96,9 +96,10 @@ body{
   <button class="bill" onclick="hesap()">💳 Hesap İste</button>
 </div>
 
+<!-- ✅ HESAP ALANI -->
 <div class="hesap">
   <h3>🧾 Hesabım</h3>
-  <div id="hesapList"></div>
+  <div id="hesapList">Henüz sipariş yok</div>
   <h3 id="hesapTotal">Toplam: 0₺</h3>
 </div>
 
@@ -123,7 +124,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔐 MASA KONTROL
+// 🔐 MASA
 const masa = new URLSearchParams(location.search).get("table");
 
 if(!masa){
@@ -148,11 +149,8 @@ async function loadMenu(){
     html += `
       <div class="card">
         <b>${p.name}</b><br>
-
         <p>${p.description || ""}</p>
-        
         <span>${p.price}₺</span>
-        
         <button onclick="ekle('${d.id}','${p.name}',${p.price})">
           Sepete Ekle
         </button>
@@ -192,7 +190,7 @@ function guncelle(){
   document.getElementById("total").innerText = "Toplam: " + total + "₺";
 }
 
-// 📦 SİPARİŞ
+// 📦 SİPARİŞ GÖNDER
 window.siparis = async ()=>{
 
   if(sepet.length===0){
@@ -204,13 +202,13 @@ window.siparis = async ()=>{
   sepet.forEach(i=> total += i.price*i.qty);
 
   await addDoc(collection(db,"orders"),{
-  table: masa,
-  items: sepet,
-  total: total,
-  status: "Bekliyor",   // ✅ EKLENDİ
-  closed: false,        // ✅ EKLENDİ
-  createdAt: serverTimestamp()
-});
+    table: masa,
+    items: sepet,
+    total: total,
+    status: "Bekliyor",
+    closed: false,
+    createdAt: serverTimestamp()
+  });
 
   alert("Sipariş gönderildi");
 
@@ -228,7 +226,7 @@ window.garson = async ()=>{
   alert("Garson geliyor");
 };
 
-// 💳 HESAP
+// 💳 HESAP İSTE
 window.hesap = async ()=>{
   await addDoc(collection(db,"billRequests"),{
     table: masa,
@@ -238,7 +236,7 @@ window.hesap = async ()=>{
   alert("Hesap istendi");
 };
 
-// 🔥 CANLI HESAP
+// 🔥 HESAP CANLI TAKİP
 function hesapYukle(){
 
   onSnapshot(collection(db,"orders"), (snap)=>{
@@ -250,7 +248,11 @@ function hesapYukle(){
 
       const o = d.data();
 
-      if(o.table !== masa || o.closed) return;
+      // sadece bu masa
+      if(o.table !== masa) return;
+
+      // sadece açık hesap
+      if(o.closed === true) return;
 
       (o.items || []).forEach(i=>{
         html += `${i.name} x${i.qty}<br>`;
@@ -259,13 +261,16 @@ function hesapYukle(){
 
     });
 
-    document.getElementById("hesapList").innerHTML = html;
-    document.getElementById("hesapTotal").innerText = "Toplam: " + total + "₺";
+    document.getElementById("hesapList").innerHTML =
+      html || "Henüz sipariş yok";
+
+    document.getElementById("hesapTotal").innerText =
+      "Toplam: " + total + "₺";
 
   });
 }
 
-// 🚀 START
+// 🚀 BAŞLAT
 loadMenu();
 hesapYukle();
 
