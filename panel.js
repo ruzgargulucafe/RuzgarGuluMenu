@@ -186,3 +186,26 @@ window.hesapKapat = async (masa,id)=>{
 
   await deleteDoc(doc(db,"billRequests",id));
 };
+
+     window.odemeAl = async (masa, requestId, tip)=>{
+
+  const snap = await getDocs(collection(db,"orders"));
+
+  for(const d of snap.docs){
+    const o = d.data();
+
+    if(o.table === masa && !o.closed){
+
+      await updateDoc(doc(db,"orders",d.id),{
+        closed: true,
+        paymentType: tip,
+        paidAt: new Date()
+      });
+
+    }
+  }
+
+  // hesap isteğini sil
+  await deleteDoc(doc(db,"billRequests",requestId));
+
+};
