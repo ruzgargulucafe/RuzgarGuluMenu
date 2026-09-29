@@ -78,7 +78,7 @@ import {
 
 // 🔥 FIREBASE
 const app = initializeApp({
-  apiKey: "AIza...",
+  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
   authDomain: "ruzgarguluqr.firebaseapp.com",
   projectId: "ruzgarguluqr"
 });
@@ -98,37 +98,41 @@ snap.forEach(d=>{
 
   const o = d.data();
 
-  // SADECE AKTİF SİPARİŞ
-  if(o.closed===true) return;
+  // güvenlik
+  if(!o) return;
+  if(o.closed === true) return;
 
-  const items = o.items.map(i=> i.name+" x"+i.qty).join("<br>");
+  // items güvenli
+  const items = (o.items || [])
+    .map(i => (i?.name || "Ürün") + " x" + (i?.qty || 1))
+    .join("<br>");
 
-  // YENİ
-  if(o.status=="yeni" || o.status=="Bekliyor"){
+  // YENİ SİPARİŞ
+  if(o.status === "yeni" || o.status === "Bekliyor"){
 
-    yeniHTML+=`
+    yeniHTML += `
     <div class="card">
-    <b>${o.table}</b><br><br>
-    ${items}
-    <br><b>${o.total}₺</b><br>
+      <b>${o.table || "-"}</b><br><br>
+      ${items || "Ürün yok"}<br><br>
+      <b>${o.total || 0}₺</b><br>
 
-    <button class="btn-hazir"
-    onclick="hazir('${d.id}')">Hazırla</button>
+      <button class="btn-hazir"
+      onclick="hazir('${d.id}')">Hazırla</button>
     </div>
     `;
   }
 
-  // HAZIR
-  if(o.status=="hazır"){
+  // HAZIR SİPARİŞ
+  if(o.status === "hazır"){
 
-    hazirHTML+=`
+    hazirHTML += `
     <div class="card">
-    <b>${o.table}</b><br><br>
-    ${items}
-    <br><b>${o.total}₺</b><br>
+      <b>${o.table || "-"}</b><br><br>
+      ${items}<br><br>
+      <b>${o.total}₺</b><br>
 
-    <button class="btn-teslim"
-    onclick="teslim('${d.id}')">Teslim Et</button>
+      <button class="btn-teslim"
+      onclick="teslim('${d.id}')">Teslim Et</button>
     </div>
     `;
   }
@@ -144,7 +148,7 @@ document.getElementById("hazir").innerHTML =
 });
 
 // =====================
-// GARSON ÇAĞRI
+// GARSON
 // =====================
 
 onSnapshot(collection(db,"calls"), snap=>{
@@ -156,9 +160,9 @@ snap.forEach(d=>{
 
   html+=`
   <div class="card">
-  Masa: ${c.table}
-  <button class="btn-sil"
-  onclick="silCall('${d.id}')">Temizle</button>
+    Masa: ${c?.table || "-"}
+    <button class="btn-sil"
+    onclick="silCall('${d.id}')">Temizle</button>
   </div>
   `;
 });
@@ -169,7 +173,7 @@ document.getElementById("calls").innerHTML =
 });
 
 // =====================
-// HESAP İSTE
+// HESAP
 // =====================
 
 onSnapshot(collection(db,"billRequests"), snap=>{
@@ -181,9 +185,9 @@ snap.forEach(d=>{
 
   html+=`
   <div class="card">
-  Masa: ${b.table}
-  <button class="btn-sil"
-  onclick="silBill('${d.id}')">Temizle</button>
+    Masa: ${b?.table || "-"}
+    <button class="btn-sil"
+    onclick="silBill('${d.id}')">Temizle</button>
   </div>
   `;
 });
@@ -194,7 +198,7 @@ document.getElementById("bills").innerHTML =
 });
 
 // =====================
-// FONKSİYONLAR
+// AKSİYONLAR
 // =====================
 
 window.hazir = async(id)=>{
