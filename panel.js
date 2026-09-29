@@ -199,7 +199,9 @@ window.hesapKapat = async (masa,id)=>{
       await updateDoc(doc(db,"orders",d.id),{
         closed: true,
         paymentType: tip,
-        paidAt: new Date()
+        import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+paidAt: serverTimestamp()
       });
 
     }
