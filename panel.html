@@ -16,48 +16,63 @@ body{
 
 h1{text-align:center;}
 
-.section{margin-top:25px;}
+.section{margin-top:30px;}
 
 .card{
   background:#222;
   padding:15px;
-  margin:10px 0;
-  border-radius:10px;
+  border-radius:12px;
+  margin-bottom:10px;
 }
 
 button{
   padding:8px 12px;
-  margin-top:10px;
   border:none;
   border-radius:8px;
   cursor:pointer;
+  margin-top:10px;
 }
 
-.btn-hazir{background:orange;}
-.btn-teslim{background:green;color:white;}
-.btn-sil{background:red;color:white;}
+.ok{background:#28a745;color:white;}
+.clear{background:#dc3545;color:white;}
+
+.small{
+  font-size:12px;
+  color:#bbb;
+}
 </style>
 
 </head>
+
 <body>
 
-<h1>🍽 Rüzgar Gülü Panel</h1>
+<h1>🍽️ Rüzgar Gülü Panel</h1>
 
+<!-- 🔥 YENİ SİPARİŞ -->
 <div class="section">
 <h2>🆕 Yeni Siparişler</h2>
-<div id="yeni"></div>
+<div id="newOrders"></div>
 </div>
 
+<!-- 🔥 HAZIRLANAN -->
 <div class="section">
 <h2>🍳 Hazırlananlar</h2>
-<div id="hazir"></div>
+<div id="readyOrders"></div>
 </div>
 
+<!-- 🔥 AÇIK MASALAR -->
+<div class="section">
+<h2>🪑 Açık Masalar</h2>
+<div id="tables"></div>
+</div>
+
+<!-- 🔥 GARSON -->
 <div class="section">
 <h2>🛎 Garson Çağrıları</h2>
 <div id="calls"></div>
 </div>
 
+<!-- 🔥 HESAP -->
 <div class="section">
 <h2>💰 Hesap İstekleri</h2>
 <div id="bills"></div>
@@ -76,80 +91,117 @@ import {
   deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔥 FIREBASE
 const app = initializeApp({
-  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
+  apiKey: "AIza...",
   authDomain: "ruzgarguluqr.firebaseapp.com",
   projectId: "ruzgarguluqr"
 });
 
 const db = getFirestore(app);
 
-// =====================
-// SİPARİŞLER
-// =====================
+function saat(ts){
+  if(!ts) return "";
+  const d = ts.toDate();
+  return d.toLocaleTimeString("tr-TR");
+}
+
+function tarih(ts){
+  if(!ts) return "";
+  const d = ts.toDate();
+  return d.toLocaleDateString("tr-TR");
+}
+
+//////////////////////////////////////////////////////
+// 📦 SİPARİŞLER
+//////////////////////////////////////////////////////
 
 onSnapshot(collection(db,"orders"), snap=>{
 
-let yeniHTML="";
-let hazirHTML="";
+let newHTML="";
+let readyHTML="";
+let tableTotals={};
 
 snap.forEach(d=>{
 
   const o = d.data();
 
-  // güvenlik
-  if(!o) return;
-  if(o.closed === true) return;
+  if(o.closed) return;
 
-  // items güvenli
-  const items = (o.items || [])
-    .map(i => (i?.name || "Ürün") + " x" + (i?.qty || 1))
-    .join("<br>");
+  // masa toplamı hesapla
+  if(!tableTotals[o.table]) tableTotals[o.table]=0;
+  tableTotals[o.table]+=o.total || 0;
 
   // YENİ SİPARİŞ
-  if(o.status === "yeni" || o.status === "Bekliyor"){
+  if(o.status=="Bekliyor"){
 
-    yeniHTML += `
+    newHTML += `
     <div class="card">
-      <b>${o.table || "-"}</b><br><br>
-      ${items || "Ürün yok"}<br><br>
-      <b>${o.total || 0}₺</b><br>
+      <b>${o.table}</b><br>
 
-      <button class="btn-hazir"
-      onclick="hazir('${d.id}')">Hazırla</button>
+      ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
+
+      <br><b>${o.total}₺</b>
+
+      <div class="small">
+        ${tarih(o.createdAt)} ${saat(o.createdAt)}
+      </div>
+
+      <button class="ok" onclick="hazir('${d.id}')">
+        Hazır Yap
+      </button>
     </div>
     `;
   }
 
-  // HAZIR SİPARİŞ
-  if(o.status === "hazır"){
-
-    hazirHTML += `
+  // HAZIRLANAN
+  if(o.status=="Hazır"){
+    readyHTML += `
     <div class="card">
-      <b>${o.table || "-"}</b><br><br>
-      ${items}<br><br>
-      <b>${o.total}₺</b><br>
-
-      <button class="btn-teslim"
-      onclick="teslim('${d.id}')">Teslim Et</button>
+      <b>${o.table}</b><br>
+      ${o.total}₺
     </div>
     `;
   }
 
 });
 
-document.getElementById("yeni").innerHTML =
-  yeniHTML || "Sipariş yok";
+// YAZDIR
+document.getElementById("newOrders").innerHTML =
+  newHTML || "Sipariş yok";
 
-document.getElementById("hazir").innerHTML =
-  hazirHTML || "Yok";
+document.getElementById("readyOrders").innerHTML =
+  readyHTML || "Yok";
+
+// 🔥 AÇIK MASALAR
+let tableHTML="";
+
+Object.keys(tableTotals).forEach(t=>{
+  tableHTML += `
+    <div class="card">
+      <b>${t}</b><br>
+      Toplam: ${tableTotals[t]}₺
+    </div>
+  `;
+});
+
+document.getElementById("tables").innerHTML =
+  tableHTML || "Açık masa yok";
 
 });
 
-// =====================
-// GARSON
-// =====================
+//////////////////////////////////////////////////////
+// 🍳 HAZIR YAP
+//////////////////////////////////////////////////////
+
+window.hazir = async(id)=>{
+  await updateDoc(doc(db,"orders",id),{
+    status:"Hazır"
+  });
+};
+
+//////////////////////////////////////////////////////
+// 🛎 GARSON ÇAĞRILARI
+//////////////////////////////////////////////////////
 
 onSnapshot(collection(db,"calls"), snap=>{
 
@@ -158,11 +210,17 @@ let html="";
 snap.forEach(d=>{
   const c = d.data();
 
-  html+=`
+  html += `
   <div class="card">
-    Masa: ${c?.table || "-"}
-    <button class="btn-sil"
-    onclick="silCall('${d.id}')">Temizle</button>
+    <b>Masa: ${c.table}</b>
+
+    <div class="small">
+      ${tarih(c.createdAt)} ${saat(c.createdAt)}
+    </div>
+
+    <button class="clear" onclick="silCall('${d.id}')">
+      Temizle
+    </button>
   </div>
   `;
 });
@@ -172,9 +230,13 @@ document.getElementById("calls").innerHTML =
 
 });
 
-// =====================
-// HESAP
-// =====================
+window.silCall = async(id)=>{
+  await deleteDoc(doc(db,"calls",id));
+};
+
+//////////////////////////////////////////////////////
+// 💰 HESAP İSTEKLERİ
+//////////////////////////////////////////////////////
 
 onSnapshot(collection(db,"billRequests"), snap=>{
 
@@ -183,11 +245,17 @@ let html="";
 snap.forEach(d=>{
   const b = d.data();
 
-  html+=`
+  html += `
   <div class="card">
-    Masa: ${b?.table || "-"}
-    <button class="btn-sil"
-    onclick="silBill('${d.id}')">Temizle</button>
+    <b>Masa: ${b.table}</b><br>
+
+    <div class="small">
+      ${tarih(b.createdAt)} ${saat(b.createdAt)}
+    </div>
+
+    <button class="clear" onclick="silBill('${d.id}')">
+      Temizle
+    </button>
   </div>
   `;
 });
@@ -196,27 +264,6 @@ document.getElementById("bills").innerHTML =
   html || "Yok";
 
 });
-
-// =====================
-// AKSİYONLAR
-// =====================
-
-window.hazir = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"hazır"
-  });
-};
-
-window.teslim = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"Teslim Edildi",
-    closed:true
-  });
-};
-
-window.silCall = async(id)=>{
-  await deleteDoc(doc(db,"calls",id));
-};
 
 window.silBill = async(id)=>{
   await deleteDoc(doc(db,"billRequests",id));
