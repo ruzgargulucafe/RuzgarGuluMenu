@@ -257,19 +257,30 @@ onSnapshot(collection(db,"orders"), snap=>{
 
 window.gunSonuKapat = async ()=>{
 
-  if(!confirm("Gün sonu alınsın mı?")) return;
+  if(!confirm("Gün sonu alınsın mı? Açık masalar da kapatılacak!")) return;
 
   const snap = await getDocs(collection(db,"orders"));
 
   for(const d of snap.docs){
     const o = d.data();
 
-    if(o.closed && !o.dayClosed){
+    // 🔥 Açık masaları da kapat
+    if(!o.closed){
+      await updateDoc(doc(db,"orders",d.id),{
+        closed: true,
+        paymentType: "Nakit", // istersen "Belirsiz" yapabilirsin
+        paidAt: serverTimestamp(),
+        dayClosed: true
+      });
+    }
+
+    // 🔥 Zaten kapalıysa sadece gün sonu işaretle
+    else if(o.closed && !o.dayClosed){
       await updateDoc(doc(db,"orders",d.id),{
         dayClosed: true
       });
     }
   }
 
-  alert("Gün sonu alındı ✅");
+  alert("Gün sonu alındı, tüm masalar kapatıldı ✅");
 };
