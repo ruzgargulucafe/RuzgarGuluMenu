@@ -209,3 +209,16 @@ window.hesapKapat = async (masa,id)=>{
   await deleteDoc(doc(db,"billRequests",requestId));
 
 };
+
+document.addEventListener("click", function(e){
+
+  if(e.target.dataset.tip){
+
+    const masa = e.target.dataset.masa;
+    const id = e.target.dataset.id;
+    const tip = e.target.dataset.tip;
+
+    window.odemeAl(masa, id, tip);
+  }
+
+});
