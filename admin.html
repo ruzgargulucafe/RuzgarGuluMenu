@@ -93,7 +93,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  onSnapshot
+  onSnapshot,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -307,6 +308,36 @@ urun();
 window.silUrun=async(id)=>{
 await deleteDoc(doc(db,"products",id));
 urun();
+};
+  // ✏️ DÜZENLE AÇ
+window.duzenleUrunAc = (id,name,price)=>{
+  document.getElementById("view_"+id).style.display="none";
+  document.getElementById("edit_"+id).style.display="block";
+};
+
+// ❌ İPTAL
+window.iptalUrun = (id)=>{
+  document.getElementById("view_"+id).style.display="block";
+  document.getElementById("edit_"+id).style.display="none";
+};
+
+// 💾 GÜNCELLE
+window.guncelleUrun = async(id)=>{
+
+  const yeniAd = document.getElementById("ad_"+id).value.trim();
+  const yeniFiyat = Number(document.getElementById("fiyat_"+id).value);
+
+  if(yeniAd==="" || !yeniFiyat){
+    alert("Eksik bilgi");
+    return;
+  }
+
+  await updateDoc(doc(db,"products",id),{
+    name: yeniAd,
+    price: yeniFiyat
+  });
+
+  urun(); // listeyi yenile
 };
 
 // ================= SİPARİŞ =================
