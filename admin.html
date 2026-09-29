@@ -251,9 +251,21 @@ snap.forEach(d=>{
 const p=d.data();
 h+=`
 <div class="card">
-<b>${p.name}</b><br>
-${p.price}₺<br>
-<button onclick="silUrun('${d.id}')">Sil</button>
+
+<div id="view_${d.id}">
+  <b>${p.name}</b><br>
+  ${p.price}₺<br>
+  <button onclick="duzenleUrunAc('${d.id}','${p.name}',${p.price})">Düzenle</button>
+  <button onclick="silUrun('${d.id}')">Sil</button>
+</div>
+
+<div id="edit_${d.id}" style="display:none">
+  <input id="ad_${d.id}" value="${p.name}">
+  <input id="fiyat_${d.id}" value="${p.price}">
+  <button onclick="guncelleUrun('${d.id}')">Kaydet</button>
+  <button onclick="iptalUrun('${d.id}')">İptal</button>
+</div>
+
 </div>`;
 });
 
