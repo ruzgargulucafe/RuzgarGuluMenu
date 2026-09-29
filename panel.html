@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Rüzgar Gülü Panel</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#111;
+  color:#fff;
+  padding:15px;
+}
+
+h1{text-align:center;}
+
+.section{margin-top:25px;}
+
+.card{
+  background:#222;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.bekliyor{background:#ff9800;}
+.hazir{background:#28a745;}
+.teslim{background:#2196f3;}
+.sil{background:#dc3545;}
+</style>
+</head>
+
+<body>
+
+<h1>🍽 Rüzgar Gülü Panel</h1>
+
+<div class="section">
+<h2>🆕 Yeni Siparişler</h2>
+<div id="orders"></div>
+</div>
+
+<div class="section">
+<h2>🍳 Hazırlananlar</h2>
+<div id="ready"></div>
+</div>
+
+<div class="section">
+<h2>🛎 Garson Çağrıları</h2>
+<div id="calls"></div>
+</div>
+
+<div class="section">
+<h2>💳 Hesap İstekleri</h2>
+<div id="bills"></div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
+  authDomain: "ruzgarguluqr.firebaseapp.com",
+  projectId: "ruzgarguluqr"
+});
+
+const db = getFirestore(app);
+
+//////////////////////////////////////////////////
+// 🆕 YENİ SİPARİŞLER
+//////////////////////////////////////////////////
+
+onSnapshot(
+  query(collection(db,"orders"), where("status","==","Bekliyor")),
+snap=>{
+
+let html="";
+
+snap.forEach(d=>{
+const o=d.data();
+
+if(o.closed) return;
+
+html+=`
+<div class="card">
+<h3>${o.table}</h3>
+
+${(o.items||[]).map(i=>i.name+" x"+i.qty).join("<br>")}
+
+<br><b>${o.total}₺</b>
+
+<button class="hazir" onclick="hazir('${d.id}')">
+Hazır Yap
+</button>
+</div>
+`;
+});
+
+document.getElementById("orders").innerHTML = html || "Sipariş yok";
+
+});
+
+//////////////////////////////////////////////////
+// 🍳 HAZIR SİPARİŞLER
+//////////////////////////////////////////////////
+
+onSnapshot(
+  query(collection(db,"orders"), where("status","==","Hazır")),
+snap=>{
+
+let html="";
+
+snap.forEach(d=>{
+const o=d.data();
+
+if(o.closed) return;
+
+html+=`
+<div class="card">
+<h3>${o.table}</h3>
+
+${(o.items||[]).map(i=>i.name+" x"+i.qty).join("<br>")}
+
+<br><b>${o.total}₺</b>
+
+<button class="teslim" onclick="teslim('${d.id}')">
+Teslim Et
+</button>
+</div>
+`;
+});
+
+document.getElementById("ready").innerHTML = html || "Yok";
+
+});
+
+//////////////////////////////////////////////////
+// 🛎 GARSON
+//////////////////////////////////////////////////
+
+onSnapshot(collection(db,"calls"),snap=>{
+
+let html="";
+
+snap.forEach(d=>{
+html+=`
+<div class="card">
+Masa ${d.data().table}
+<button class="sil" onclick="silCall('${d.id}')">Temizle</button>
+</div>
+`;
+});
+
+document.getElementById("calls").innerHTML = html || "Yok";
+
+});
+
+//////////////////////////////////////////////////
+// 💳 HESAP
+//////////////////////////////////////////////////
+
+onSnapshot(collection(db,"billRequests"),snap=>{
+
+let html="";
+
+snap.forEach(d=>{
+html+=`
+<div class="card">
+Masa ${d.data().table}
+<button class="sil" onclick="silBill('${d.id}')">Temizle</button>
+</div>
+`;
+});
+
+document.getElementById("bills").innerHTML = html || "Yok";
+
+});
+
+//////////////////////////////////////////////////
+// ACTIONS
+//////////////////////////////////////////////////
+
+window.hazir = async(id)=>{
+await updateDoc(doc(db,"orders",id),{
+status:"Hazır"
+});
+};
+
+window.teslim = async(id)=>{
+await updateDoc(doc(db,"orders",id),{
+status:"Teslim Edildi",
+closed:true
+});
+};
+
+window.silCall = async(id)=>{
+await deleteDoc(doc(db,"calls",id));
+};
+
+window.silBill = async(id)=>{
+await deleteDoc(doc(db,"billRequests",id));
+};
+
+</script>
+
+</body>
+</html>
