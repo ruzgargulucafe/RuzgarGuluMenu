@@ -95,6 +95,13 @@ doc,
 onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+    
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCj4F_8WOwLzVoREs-gRZDXfgYEkLtNvig",
   authDomain: "ruzgarguluqr.firebaseapp.com",
@@ -103,7 +110,7 @@ const firebaseConfig = {
 
 const appF = initializeApp(firebaseConfig);
 const db = getFirestore(appF);
-
+const storage = getStorage(appF);
 // SAYFA
 window.page = (p)=>{
 document.getElementById("title").innerText = p.toUpperCase();
@@ -244,18 +251,33 @@ ${p.price}₺<br>
 document.getElementById("list").innerHTML=h;
 }
 
-window.ekleUrun=async()=>{
+window.ekleUrun = async()=>{
+
 const name = document.getElementById("u").value.trim();
 const price = Number(document.getElementById("f").value);
+const file = document.getElementById("resimFile").files[0];
 
-if(name==="" || !price) return alert("Eksik bilgi");
+if(name === "" || !price) return alert("Eksik bilgi");
 
+let imageURL = "";
+
+// 📸 FOTO YÜKLE
+if(file){
+  const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
+
+  await uploadBytes(fileRef, file);
+
+  imageURL = await getDownloadURL(fileRef);
+}
+
+// 🔥 FIRESTORE'A KAYDET
 await addDoc(collection(db,"products"),{
-name:name,
-price:price,
-description:document.getElementById("aciklama").value,
-image:document.getElementById("resim").value
+  name: name,
+  price: price,
+  description: document.getElementById("aciklama").value,
+  image: imageURL
 });
+
 urun();
 };
 
