@@ -256,6 +256,14 @@ katSnap.forEach(d=>{
 });
 
 document.getElementById("kategoriSec").innerHTML = katHTML;
+
+  const katSnap = await getDocs(collection(db,"categories"));
+
+let kategoriMap = {};
+
+katSnap.forEach(d=>{
+  kategoriMap[d.id] = d.data().name;
+});
   
 const snap=await getDocs(collection(db,"products"));
 let h="";
@@ -267,7 +275,7 @@ h+=`
 
 <div id="view_${d.id}">
   <b>${p.name}</b><br>
-<small>Kategori: ${p.categoryId || "-"}</small><br>
+<small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small>
   ${p.price}₺<br>
   <button onclick="duzenleUrunAc('${d.id}','${p.name}',${p.price})">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
