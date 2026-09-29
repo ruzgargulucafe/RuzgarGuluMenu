@@ -422,7 +422,11 @@ const sidebar = document.querySelector(".sidebar");
 menuBtn.onclick = ()=>{
   sidebar.classList.toggle("active");
 };
-  
+  document.addEventListener("click", (e)=>{
+  if(!sidebar.contains(e.target) && e.target !== menuBtn){
+    sidebar.classList.remove("active");
+  }
+});
 </script>
 
 </body>
