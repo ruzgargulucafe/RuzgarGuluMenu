@@ -185,6 +185,7 @@ window.odemeAl = async (masa, requestId, tip)=>{
         closed: true,
         paymentType: tip,
         paidAt: serverTimestamp()
+        dayClosed: false
       });
 
     }
@@ -214,7 +215,8 @@ onSnapshot(collection(db,"orders"), snap=>{
     if(!o.closed) return;
     if(!o.paymentType) return;
     if(!o.paidAt) return;
-
+    if(o.dayClosed) return;
+    
     let tarih;
 
     try{
@@ -252,3 +254,22 @@ onSnapshot(collection(db,"orders"), snap=>{
   `;
 
 });
+
+window.gunSonu = async ()=>{
+
+  if(!confirm("Gün sonu alınsın mı?")) return;
+
+  const snap = await getDocs(collection(db,"orders"));
+
+  for(const d of snap.docs){
+    const o = d.data();
+
+    if(o.closed && !o.dayClosed){
+      await updateDoc(doc(db,"orders",d.id),{
+        dayClosed: true
+      });
+    }
+  }
+
+  alert("Gün sonu alındı ✅");
+};
