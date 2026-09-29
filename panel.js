@@ -222,3 +222,47 @@ document.addEventListener("click", function(e){
   }
 
 });
+
+onSnapshot(collection(db,"orders"), snap=>{
+
+  let toplam = 0;
+  let nakit = 0;
+  let kart = 0;
+
+  const today = new Date().toDateString();
+
+  snap.forEach(d=>{
+
+    const o = d.data();
+
+    if(!o.closed) return; // sadece ödenmişler
+
+    if(!o.paidAt) return;
+
+    const tarih = new Date(o.paidAt).toDateString();
+
+    if(tarih === today){
+
+      toplam += o.total || 0;
+
+      if(o.paymentType === "Nakit"){
+        nakit += o.total || 0;
+      }
+
+      if(o.paymentType === "Kart"){
+        kart += o.total || 0;
+      }
+
+    }
+
+  });
+
+  document.getElementById("kasa").innerHTML = `
+    <div class="card">
+      <b>Toplam:</b> ${toplam}₺<br>
+      💵 Nakit: ${nakit}₺<br>
+      💳 Kart: ${kart}₺
+    </div>
+  `;
+
+});
