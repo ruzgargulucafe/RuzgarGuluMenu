@@ -266,19 +266,63 @@ urun();
 
 // ================= SİPARİŞ =================
 function siparis(){
-onSnapshot(collection(db,"orders"),snap=>{
-let h="";
+
+onSnapshot(collection(db,"orders"), snap=>{
+
+let html = "";
+
+const today = new Date();
+
 snap.forEach(d=>{
-const o=d.data();
-h+=`
-<div class="card">
-<b>${o.table}</b><br>
-${o.items?.map(i=>i.name+" x"+i.qty).join("<br>")}
-<br>${o.total}₺
-</div>`;
+
+  const o = d.data();
+
+  if(!o || !o.createdAt) return;
+
+  let tarih;
+
+  try{
+    tarih = o.createdAt.toDate();
+  }catch{
+    return;
+  }
+
+  // 🔥 SADECE BUGÜN
+  if(
+    tarih.getDate() !== today.getDate() ||
+    tarih.getMonth() !== today.getMonth() ||
+    tarih.getFullYear() !== today.getFullYear()
+  ){
+    return;
+  }
+
+  // 🕒 SAAT + TARİH FORMAT
+  const saat = tarih.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  const tarihStr = tarih.toLocaleDateString("tr-TR");
+
+  // 📦 ÜRÜNLER
+  let urunler = "";
+  (o.items || []).forEach(i=>{
+    urunler += `${i.name} x${i.qty}<br>`;
+  });
+
+  html += `
+  <div class="card">
+    <b>🪑 Masa: ${o.table}</b><br>
+    <small>📅 ${tarihStr} - 🕒 ${saat}</small><br><br>
+    ${urunler}
+    <b>${o.total}₺</b>
+  </div>`;
 });
-document.getElementById("app").innerHTML=h;
+
+document.getElementById("app").innerHTML = html || "Bugün sipariş yok";
+
 });
+
 }
 
 // ================= GARSON =================
