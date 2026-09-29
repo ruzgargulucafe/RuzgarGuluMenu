@@ -7,16 +7,19 @@
 
 <style>
 body{
-  margin:0;
   font-family:Arial;
   background:#111;
-  color:white;
+  color:#fff;
   padding:20px;
 }
 
-h1{text-align:center;}
+h1{
+  text-align:center;
+}
 
-.section{margin-top:30px;}
+.section{
+  margin-top:25px;
+}
 
 .card{
   background:#222;
@@ -26,259 +29,49 @@ h1{text-align:center;}
 }
 
 button{
-  padding:8px 12px;
+  padding:10px;
   border:none;
   border-radius:8px;
   cursor:pointer;
   margin-top:10px;
 }
 
-.ok{background:#28a745;color:white;}
-.clear{background:#dc3545;color:white;}
-
-.small{
-  font-size:12px;
-  color:#bbb;
-}
+.green{background:#28a745;color:#fff;}
+.red{background:#dc3545;color:#fff;}
+.orange{background:#ff9800;color:#fff;}
 </style>
-
 </head>
 
 <body>
 
-<h1>🍽️ Rüzgar Gülü Panel</h1>
+<h1>🍽 Rüzgar Gülü Panel</h1>
 
-<!-- 🔥 YENİ SİPARİŞ -->
 <div class="section">
-<h2>🆕 Yeni Siparişler</h2>
-<div id="newOrders"></div>
+  <h2>🆕 Yeni Siparişler</h2>
+  <div id="yeni"></div>
 </div>
 
-<!-- 🔥 HAZIRLANAN -->
 <div class="section">
-<h2>🍳 Hazırlananlar</h2>
-<div id="readyOrders"></div>
+  <h2>🍳 Hazırlananlar</h2>
+  <div id="hazir"></div>
 </div>
 
-<!-- 🔥 AÇIK MASALAR -->
 <div class="section">
-<h2>🪑 Açık Masalar</h2>
-<div id="tables"></div>
+  <h2>🪑 Açık Masalar</h2>
+  <div id="masalar"></div>
 </div>
 
-<!-- 🔥 GARSON -->
 <div class="section">
-<h2>🛎 Garson Çağrıları</h2>
-<div id="calls"></div>
+  <h2>🛎 Garson Çağrıları</h2>
+  <div id="calls"></div>
 </div>
 
-<!-- 🔥 HESAP -->
 <div class="section">
-<h2>💰 Hesap İstekleri</h2>
-<div id="bills"></div>
+  <h2>💳 Hesap İstekleri</h2>
+  <div id="bills"></div>
 </div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  doc,
-  updateDoc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIza...",
-  authDomain: "ruzgarguluqr.firebaseapp.com",
-  projectId: "ruzgarguluqr"
-});
-
-const db = getFirestore(app);
-
-function saat(ts){
-  if(!ts) return "";
-  const d = ts.toDate();
-  return d.toLocaleTimeString("tr-TR");
-}
-
-function tarih(ts){
-  if(!ts) return "";
-  const d = ts.toDate();
-  return d.toLocaleDateString("tr-TR");
-}
-
-//////////////////////////////////////////////////////
-// 📦 SİPARİŞLER
-//////////////////////////////////////////////////////
-
-onSnapshot(collection(db,"orders"), snap=>{
-
-let newHTML="";
-let readyHTML="";
-let tableTotals={};
-
-snap.forEach(d=>{
-
-  const o = d.data();
-
-  if(o.closed) return;
-
-  // masa toplamı hesapla
-  if(!tableTotals[o.table]) tableTotals[o.table]=0;
-  tableTotals[o.table]+=o.total || 0;
-
-  // YENİ SİPARİŞ
-  if(o.status=="Bekliyor"){
-
-    newHTML += `
-    <div class="card">
-      <b>${o.table}</b><br>
-
-      ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
-
-      <br><b>${o.total}₺</b>
-
-      <div class="small">
-        ${tarih(o.createdAt)} ${saat(o.createdAt)}
-      </div>
-
-      <button class="ok" onclick="hazir('${d.id}')">
-        Hazır Yap
-      </button>
-    </div>
-    `;
-  }
-
-  // HAZIRLANAN
-  if(o.status=="Hazır"){
-
-  readyHTML += `
-  <div class="card">
-    <b>${o.table}</b><br>
-
-    ${o.items.map(i=>i.name+" x"+i.qty).join("<br>")}
-
-    <br><b>${o.total}₺</b>
-    <div style="color:lime;">✔ Hazır</div>
-  </div>
-  `;
-}
-
-});
-
-// YAZDIR
-document.getElementById("newOrders").innerHTML =
-  newHTML || "Sipariş yok";
-
-document.getElementById("readyOrders").innerHTML =
-  readyHTML || "Yok";
-
-// 🔥 AÇIK MASALAR
-let tableHTML="";
-
-Object.keys(tableTotals).forEach(t=>{
-  tableHTML += `
-    <div class="card">
-      <b>${t}</b><br>
-      Toplam: ${tableTotals[t]}₺
-    </div>
-  `;
-});
-
-document.getElementById("tables").innerHTML =
-  tableHTML || "Açık masa yok";
-
-});
-
-//////////////////////////////////////////////////////
-// 🍳 HAZIR YAP
-//////////////////////////////////////////////////////
-
-window.hazir = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"Hazır"
-  });
-};
-
-//////////////////////////////////////////////////////
-// 🛎 GARSON ÇAĞRILARI
-//////////////////////////////////////////////////////
-
-onSnapshot(collection(db,"calls"), snap=>{
-
-let html="";
-
-snap.forEach(d=>{
-  const c = d.data();
-
-  html += `
-  <div class="card">
-    <b>Masa: ${c.table}</b>
-
-    <div class="small">
-      ${tarih(c.createdAt)} ${saat(c.createdAt)}
-    </div>
-
-    <button class="clear" onclick="silCall('${d.id}')">
-      Temizle
-    </button>
-  </div>
-  `;
-});
-
-document.getElementById("calls").innerHTML =
-  html || "Yok";
-
-});
-
-window.silCall = async(id)=>{
-  await deleteDoc(doc(db,"calls",id));
-};
-
-//////////////////////////////////////////////////////
-// 💰 HESAP İSTEKLERİ
-//////////////////////////////////////////////////////
-
-onSnapshot(collection(db,"billRequests"), snap=>{
-
-let html="";
-
-snap.forEach(d=>{
-  const b = d.data();
-
-  html += `
-  <div class="card">
-    <b>Masa: ${b.table}</b><br>
-
-${(b.items || []).join("<br>")}
-
-<br><b>Toplam: ${b.total || 0}₺</b>
-
-    <div class="small">
-      ${tarih(b.createdAt)} ${saat(b.createdAt)}
-    </div>
-
-    <button class="clear" onclick="silBill('${d.id}')">
-      Temizle
-    </button>
-  </div>
-  `;
-});
-
-document.getElementById("bills").innerHTML =
-  html || "Yok";
-
-});
-
-window.silBill = async(id)=>{
-  await deleteDoc(doc(db,"billRequests",id));
-};
-
-</script>
+<script type="module" src="panel.js"></script>
 
 </body>
 </html>
