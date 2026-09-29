@@ -275,7 +275,7 @@ h+=`
   <b>${p.name}</b><br>
 <small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
   ${p.price}₺<br>
-  <button onclick="duzenleUrunAc('${d.id}','${p.name}',${p.price})">Düzenle</button>
+  <button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
 </div>
 
@@ -290,8 +290,6 @@ h+=`
   <option value="10" ${p.kdv==10?"selected":""}>%10 KDV</option>
   <option value="20" ${p.kdv==20?"selected":""}>%20 KDV</option>
 </select><br>
-
-<button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
 
   <select id="kat_${d.id}">
     ${Object.keys(kategoriMap).map(kid=>`
@@ -333,7 +331,6 @@ let imageURL = "";
 
 // 📸 FOTO YÜKLE
 if(file){
-  const storage = getStorage(); // 🔥 eksikti
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
 
   await uploadBytes(fileRef, file);
