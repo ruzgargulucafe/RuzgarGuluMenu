@@ -292,7 +292,8 @@ const name = document.getElementById("u").value.trim();
 const price = Number(document.getElementById("f").value);
 const file = document.getElementById("resimFile").files[0];
 const kdv = Number(document.getElementById("kdv").value);
-
+const kategoriId = document.getElementById("kategoriSec").value;
+  
 if(name === "" || !price) return alert("Eksik bilgi");
 
 let imageURL = "";
