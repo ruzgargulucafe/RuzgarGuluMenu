@@ -151,9 +151,13 @@ onSnapshot(collection(db,"billRequests"), async snap=>{
       <b>Toplam: ${toplam}₺</b><br>
       <small>${tarih}</small><br><br>
 
-      <button class="orange" onclick="hesapKapat('${b.table}','${d.id}')">
-        Hesap Alındı
-      </button>
+      <button class="orange" onclick="odemeAl('${b.table}','${d.id}','Nakit')">
+  💵 Nakit
+</button>
+
+<button class="green" onclick="odemeAl('${b.table}','${d.id}','Kart')">
+  💳 Kart
+</button>
     </div>`;
   });
 
