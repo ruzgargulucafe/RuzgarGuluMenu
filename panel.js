@@ -257,30 +257,69 @@ onSnapshot(collection(db,"orders"), snap=>{
 
 window.gunSonuKapat = async ()=>{
 
-  if(!confirm("Gün sonu alınsın mı? Açık masalar da kapatılacak!")) return;
+  if(!confirm("Gün sonu alınsın mı?")) return;
 
+  const now = new Date();
+
+  // 📌 bugünün tarihi
+  const todayStr = now.toISOString().split("T")[0];
+
+  // 🔥 orders kapat
   const snap = await getDocs(collection(db,"orders"));
 
   for(const d of snap.docs){
     const o = d.data();
 
-    // 🔥 Açık masaları da kapat
     if(!o.closed){
       await updateDoc(doc(db,"orders",d.id),{
         closed: true,
-        paymentType: "Nakit", // istersen "Belirsiz" yapabilirsin
+        paymentType: "Nakit",
         paidAt: serverTimestamp(),
         dayClosed: true
       });
-    }
-
-    // 🔥 Zaten kapalıysa sadece gün sonu işaretle
-    else if(o.closed && !o.dayClosed){
+    }else if(!o.dayClosed){
       await updateDoc(doc(db,"orders",d.id),{
         dayClosed: true
       });
     }
   }
 
-  alert("Gün sonu alındı, tüm masalar kapatıldı ✅");
+  // 🔥 gün sonu kaydı oluştur
+  await addDoc(collection(db,"dayLogs"),{
+    date: todayStr,
+    closedAt: serverTimestamp()
+  });
+
+  alert("Gün sonu alındı ✅");
 };
+
+import { addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+async function gunAcilisKontrol(){
+
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+
+  const snap = await getDocs(collection(db,"dayLogs"));
+
+  let bugunVar = false;
+
+  snap.forEach(d=>{
+    const data = d.data();
+    if(data.date === todayStr){
+      bugunVar = true;
+    }
+  });
+
+  // 📌 eğer bugün kayıt yoksa → açılış yap
+  if(!bugunVar){
+    await addDoc(collection(db,"dayLogs"),{
+      date: todayStr,
+      openedAt: serverTimestamp()
+    });
+
+    console.log("Gün açılışı yapıldı");
+  }
+}
+
+gunAcilisKontrol();
