@@ -1,1 +1,184 @@
+import { db } from "./app.js";
 
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+// =========================
+// SİPARİŞLER
+// =========================
+
+onSnapshot(collection(db,"orders"), snap=>{
+
+  let yeniHTML="";
+  let hazirHTML="";
+  let masalar = {};
+
+  snap.forEach(d=>{
+
+    const o = d.data();
+    if(o.closed) return;
+
+    if(!masalar[o.table]) masalar[o.table] = 0;
+    masalar[o.table] += o.total || 0;
+
+    let urunler="";
+    (o.items || []).forEach(i=>{
+      urunler += `${i.name} x${i.qty}<br>`;
+    });
+
+    if(o.status==="Bekliyor"){
+      yeniHTML += `
+      <div class="card">
+        <b>${o.table}</b><br>
+        ${urunler}
+        <b>${o.total}₺</b><br>
+        <button class="green" onclick="hazir('${d.id}')">✔ Hazır</button>
+      </div>`;
+    }
+
+    if(o.status==="Hazır"){
+      hazirHTML += `
+      <div class="card">
+        <b>${o.table}</b><br>
+        ${urunler}
+        <b>${o.total}₺</b><br>
+        <span style="color:lightgreen">✔ Hazır</span>
+      </div>`;
+    }
+
+  });
+
+  document.getElementById("yeni").innerHTML = yeniHTML || "Sipariş yok";
+  document.getElementById("hazir").innerHTML = hazirHTML || "Yok";
+
+  let masaHTML="";
+  for(const m in masalar){
+    masaHTML += `
+    <div class="card">
+      <b>${m}</b><br>
+      Toplam: ${masalar[m]}₺
+    </div>`;
+  }
+
+  document.getElementById("masalar").innerHTML = masaHTML || "Yok";
+
+});
+
+
+// =========================
+// HAZIR BUTONU
+// =========================
+
+window.hazir = async(id)=>{
+  await updateDoc(doc(db,"orders",id),{
+    status:"Hazır"
+  });
+};
+
+
+// =========================
+// GARSON
+// =========================
+
+onSnapshot(collection(db,"calls"), snap=>{
+
+  let html="";
+
+  snap.forEach(d=>{
+    const c = d.data();
+    const tarih = c.createdAt?.toDate().toLocaleString() || "";
+
+    html += `
+    <div class="card">
+      Masa: ${c.table}<br>
+      <small>${tarih}</small><br>
+      <button class="red" onclick="silCall('${d.id}')">Temizle</button>
+    </div>`;
+  });
+
+  document.getElementById("calls").innerHTML = html || "Yok";
+
+});
+
+window.silCall = async(id)=>{
+  await deleteDoc(doc(db,"calls",id));
+};
+
+
+// =========================
+// HESAP İSTEKLERİ (EN KRİTİK)
+// =========================
+
+onSnapshot(collection(db,"billRequests"), async snap=>{
+
+  let html="";
+
+  const ordersSnap = await getDocs(collection(db,"orders"));
+
+  snap.forEach(d=>{
+
+    const b = d.data();
+    const tarih = b.createdAt?.toDate().toLocaleString() || "";
+
+    let toplam = 0;
+    let urunler = "";
+
+    ordersSnap.forEach(oDoc=>{
+      const o = oDoc.data();
+
+      if(o.table === b.table && !o.closed){
+
+        toplam += o.total || 0;
+
+        (o.items || []).forEach(i=>{
+          urunler += `${i.name} x${i.qty}<br>`;
+        });
+
+      }
+    });
+
+    html += `
+    <div class="card">
+      <b>Masa: ${b.table}</b><br><br>
+      ${urunler}
+      <b>Toplam: ${toplam}₺</b><br>
+      <small>${tarih}</small><br><br>
+
+      <button class="orange" onclick="hesapKapat('${b.table}','${d.id}')">
+        Hesap Alındı
+      </button>
+    </div>`;
+  });
+
+  document.getElementById("bills").innerHTML = html || "Yok";
+
+});
+
+
+// =========================
+// HESAP KAPAT
+// =========================
+
+window.hesapKapat = async (masa,id)=>{
+
+  const snap = await getDocs(collection(db,"orders"));
+
+  for(const d of snap.docs){
+    const o = d.data();
+
+    if(o.table === masa && !o.closed){
+      await updateDoc(doc(db,"orders",d.id),{
+        closed:true
+      });
+    }
+  }
+
+  await deleteDoc(doc(db,"billRequests",id));
+};
