@@ -131,29 +131,59 @@ masa();
 
 // ================= KATEGORİ =================
 async function kategori(){
+
 document.getElementById("app").innerHTML=`
-<input id="k">
+<input id="k" placeholder="Kategori adı">
 <button onclick="ekleKat()">Ekle</button>
 <div id="list"></div>
 `;
 
-const snap=await getDocs(collection(db,"categories"));
+const snap = await getDocs(collection(db,"categories"));
+
 let h="";
+
 snap.forEach(d=>{
-h+=`${d.data().name} <button onclick="silKat('${d.id}')">Sil</button><br>`;
+const data = d.data();
+
+h+=`
+<div class="card">
+${data.name}
+<button onclick="silKat('${d.id}')">Sil</button>
+</div>`;
 });
+
 document.getElementById("list").innerHTML=h;
 }
 
-window.ekleKat=async()=>{
-const val = document.getElementById("k").value.trim();
-if(val==="") return alert("Kategori boş olamaz");
+// EKLE
+window.ekleKat = async ()=>{
 
-await addDoc(collection(db,"categories"),{name:val});
-kategori();
+const input = document.getElementById("k");
+const val = input.value.trim();
+
+if(val === ""){
+  alert("Kategori boş olamaz");
+  return;
+}
+
+try{
+
+  await addDoc(collection(db,"categories"),{
+    name: val
+  });
+
+  input.value = ""; // 🔥 input temizle
+  kategori();       // 🔥 listeyi yenile
+
+}catch(e){
+  console.error(e);
+  alert("Hata oluştu");
+}
+
 };
 
-window.silKat=async(id)=>{
+// SİL
+window.silKat = async(id)=>{
 await deleteDoc(doc(db,"categories",id));
 kategori();
 };
