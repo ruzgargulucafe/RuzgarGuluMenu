@@ -184,7 +184,7 @@ window.odemeAl = async (masa, requestId, tip)=>{
       await updateDoc(doc(db,"orders",d.id),{
         closed: true,
         paymentType: tip,
-        paidAt: serverTimestamp()
+        paidAt: serverTimestamp(),
         dayClosed: false
       });
 
@@ -255,7 +255,7 @@ onSnapshot(collection(db,"orders"), snap=>{
 
 });
 
-window.gunSonu = async ()=>{
+window.gunSonuKapat = async ()=>{
 
   if(!confirm("Gün sonu alınsın mı?")) return;
 
