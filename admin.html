@@ -286,10 +286,12 @@ h+=`
   <input id="fiyat_${d.id}" value="${p.price}"><br>
 
 <select id="kdv_${d.id}">
-  <option value="0" ${p.kdv==0?"selected":""}>KDV Yok</option>
+  <option value="0" ${(p.kdv ?? 0)==0?"selected":""}>KDV Yok</option>
   <option value="10" ${p.kdv==10?"selected":""}>%10 KDV</option>
   <option value="20" ${p.kdv==20?"selected":""}>%20 KDV</option>
 </select><br>
+
+<button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
 
   <select id="kat_${d.id}">
     ${Object.keys(kategoriMap).map(kid=>`
