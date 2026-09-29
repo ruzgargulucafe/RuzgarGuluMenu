@@ -6,12 +6,13 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  getDocs
+  getDocs,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
 // =========================
-// SİPARİŞLER
+// SİPARİŞLER + MASALAR
 // =========================
 
 onSnapshot(collection(db,"orders"), snap=>{
@@ -23,6 +24,7 @@ onSnapshot(collection(db,"orders"), snap=>{
   snap.forEach(d=>{
 
     const o = d.data();
+    if(!o) return;
     if(o.closed) return;
 
     if(!masalar[o.table]) masalar[o.table] = 0;
@@ -93,7 +95,7 @@ onSnapshot(collection(db,"calls"), snap=>{
 
   snap.forEach(d=>{
     const c = d.data();
-    const tarih = c.createdAt?.toDate().toLocaleString() || "";
+    const tarih = c.createdAt?.toDate()?.toLocaleString() || "";
 
     html += `
     <div class="card">
@@ -113,7 +115,7 @@ window.silCall = async(id)=>{
 
 
 // =========================
-// HESAP İSTEKLERİ (EN KRİTİK)
+// HESAP İSTEKLERİ
 // =========================
 
 onSnapshot(collection(db,"billRequests"), async snap=>{
@@ -125,7 +127,7 @@ onSnapshot(collection(db,"billRequests"), async snap=>{
   snap.forEach(d=>{
 
     const b = d.data();
-    const tarih = b.createdAt?.toDate().toLocaleString() || "";
+    const tarih = b.createdAt?.toDate()?.toLocaleString() || "";
 
     let toplam = 0;
     let urunler = "";
@@ -152,12 +154,12 @@ onSnapshot(collection(db,"billRequests"), async snap=>{
       <small>${tarih}</small><br><br>
 
       <button class="orange" onclick="odemeAl('${b.table}','${d.id}','Nakit')">
-  💵 Nakit
-</button>
+        💵 Nakit
+      </button>
 
-<button class="green" onclick="odemeAl('${b.table}','${d.id}','Kart')">
-  💳 Kart
-</button>
+      <button class="green" onclick="odemeAl('${b.table}','${d.id}','Kart')">
+        💳 Kart
+      </button>
     </div>`;
   });
 
@@ -167,27 +169,10 @@ onSnapshot(collection(db,"billRequests"), async snap=>{
 
 
 // =========================
-// HESAP KAPAT
+// ÖDEME AL
 // =========================
 
-window.hesapKapat = async (masa,id)=>{
-
-  const snap = await getDocs(collection(db,"orders"));
-
-  for(const d of snap.docs){
-    const o = d.data();
-
-    if(o.table === masa && !o.closed){
-      await updateDoc(doc(db,"orders",d.id),{
-        closed:true
-      });
-    }
-  }
-
-  await deleteDoc(doc(db,"billRequests",id));
-};
-
-     window.odemeAl = async (masa, requestId, tip)=>{
+window.odemeAl = async (masa, requestId, tip)=>{
 
   const snap = await getDocs(collection(db,"orders"));
 
@@ -199,31 +184,19 @@ window.hesapKapat = async (masa,id)=>{
       await updateDoc(doc(db,"orders",d.id),{
         closed: true,
         paymentType: tip,
-        import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-paidAt: serverTimestamp()
+        paidAt: serverTimestamp()
       });
 
     }
   }
 
-  // hesap isteğini sil
   await deleteDoc(doc(db,"billRequests",requestId));
-
 };
 
-document.addEventListener("click", function(e){
 
-  if(e.target.dataset.tip){
-
-    const masa = e.target.dataset.masa;
-    const id = e.target.dataset.id;
-    const tip = e.target.dataset.tip;
-
-    window.odemeAl(masa, id, tip);
-  }
-
-});
+// =========================
+// GÜNLÜK KASA
+// =========================
 
 onSnapshot(collection(db,"orders"), snap=>{
 
@@ -237,11 +210,18 @@ onSnapshot(collection(db,"orders"), snap=>{
 
     const o = d.data();
 
+    if(!o) return;
     if(!o.closed) return;
+    if(!o.paymentType) return;
     if(!o.paidAt) return;
 
-    // 🔥 BURASI KRİTİK
-    const tarih = o.paidAt.toDate();
+    let tarih;
+
+    try{
+      tarih = o.paidAt.toDate();
+    }catch{
+      return;
+    }
 
     if(
       tarih.getDate() === today.getDate() &&
