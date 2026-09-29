@@ -231,6 +231,11 @@ document.getElementById("app").innerHTML=`
 <input id="f" placeholder="Fiyat">
 <input id="aciklama" placeholder="Açıklama">
 <input type="file" id="resimFile" accept="image/*">
+<select id="kdv">
+  <option value="0">KDV Yok</option>
+  <option value="10">%10 KDV</option>
+  <option value="20">%20 KDV</option>
+</select>
 <button onclick="ekleUrun()">Ekle</button>
 <div id="list"></div>
 `;
@@ -268,12 +273,15 @@ if(file){
   await uploadBytes(fileRef, file);
 
   imageURL = await getDownloadURL(fileRef);
+  
+  const kdv = Number(document.getElementById("kdv").value);
 }
 
 // 🔥 FIRESTORE'A KAYDET
 await addDoc(collection(db,"products"),{
   name: name,
   price: price,
+  kdv: kdv;
   description: document.getElementById("aciklama").value,
   image: imageURL
 });
