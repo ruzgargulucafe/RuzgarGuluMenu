@@ -280,9 +280,12 @@ h+=`
 <div class="card">
 
 <div id="view_${d.id}">
+  ${p.image ? `<img src="${p.image}" style="width:100%;max-height:150px;object-fit:cover"><br>` : ""}
+
   <b>${p.name}</b><br>
   <small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
   ${p.price}₺<br>
+
   <button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
 </div>
@@ -319,6 +322,7 @@ h+=`
 document.getElementById("list").innerHTML=h;
 }
 
+// ================= EKLE =================
 window.ekleUrun = async()=>{
 
 const name = document.getElementById("u").value.trim();
@@ -373,47 +377,45 @@ await addDoc(collection(db,"products"),{
 });
 
 alert("Ürün eklendi ✅");
-
 urun();
 };
-  
+
+// ================= SİL =================
 window.silUrun=async(id)=>{
 await deleteDoc(doc(db,"products",id));
 urun();
 };
-  // ✏️ DÜZENLE AÇ
-window.duzenleUrunAc = (id,name,price)=>{
-  document.getElementById("view_"+id).style.display="none";
-  document.getElementById("edit_"+id).style.display="block";
+
+// ================= TÜMÜNÜ SİL =================
+window.tumUrunleriSil = async ()=>{
+const onay = confirm("TÜM ÜRÜNLER SİLİNECEK! Emin misin?");
+if(!onay) return;
+
+const snap = await getDocs(collection(db,"products"));
+const promises = [];
+
+snap.forEach(d=>{
+  promises.push(deleteDoc(doc(db,"products",d.id)));
+});
+
+await Promise.all(promises);
+
+alert("Tüm ürünler silindi ❌");
+urun();
 };
 
-// ❌ İPTAL
+// ================= DÜZENLE =================
+window.duzenleUrunAc = (id)=>{
+document.getElementById("view_"+id).style.display="none";
+document.getElementById("edit_"+id).style.display="block";
+};
+
 window.iptalUrun = (id)=>{
-  document.getElementById("view_"+id).style.display="block";
-  document.getElementById("edit_"+id).style.display="none";
+document.getElementById("view_"+id).style.display="block";
+document.getElementById("edit_"+id).style.display="none";
 };
 
-  window.tumUrunleriSil = async ()=>{
-
-  const onay = confirm("TÜM ÜRÜNLER SİLİNECEK! Emin misin?");
-  if(!onay) return;
-
-  const snap = await getDocs(collection(db,"products"));
-
-  const promises = [];
-
-  snap.forEach(d=>{
-    promises.push(deleteDoc(doc(db,"products",d.id)));
-  });
-
-  await Promise.all(promises);
-
-  alert("Tüm ürünler silindi ❌");
-
-  urun(); // listeyi yenile
-};
-  
-// 💾 GÜNCELLE
+// ================= GÜNCELLE =================
 window.guncelleUrun = async(id)=>{
 
 try{
@@ -436,26 +438,40 @@ let updateData = {
   kdv: kdv
 };
 
-// 📸 FOTO GÜNCELLE
+// 🔥 CLOUDINARY FOTO GÜNCELLE
 if(file){
-  const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
-  updateData.image = url;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "urunler");
+
+  const res = await fetch("https://api.cloudinary.com/v1_1/uahcjlsb/image/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if(!data.secure_url){
+    alert("Foto yüklenemedi ❌");
+    return;
+  }
+
+  updateData.image = data.secure_url;
 }
 
 await updateDoc(doc(db,"products",id), updateData);
 
 alert("Güncellendi ✅");
-
 urun();
 
 }catch(e){
-  console.error(e);
-  alert("Hata: " + e.message);
+console.error(e);
+alert("Hata: " + e.message);
 }
 
 };
+  
 // ================= SİPARİŞ =================
 function siparis(){
 
