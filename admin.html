@@ -231,52 +231,57 @@ kategori();
 
 // ================= ÜRÜN =================
 async function urun(){
+
 document.getElementById("app").innerHTML=`
 <input id="u" placeholder="Ad">
 <input id="f" placeholder="Fiyat">
 <input id="aciklama" placeholder="Açıklama">
 <input type="file" id="resimFile" accept="image/*">
+
 <select id="kdv">
   <option value="0">KDV Yok</option>
   <option value="10">%10 KDV</option>
   <option value="20">%20 KDV</option>
 </select>
+
 <select id="kategoriSec"></select>
+
 <button onclick="tumUrunleriSil()" style="background:red;color:#fff">
 🚨 Tüm Ürünleri Sil
 </button><br><br>
+
 <button onclick="ekleUrun()">Ekle</button>
+
 <div id="list"></div>
 `;
-// 🔥 KATEGORİLERİ ÇEK
+
+// 🔥 KATEGORİLER
 const katSnap = await getDocs(collection(db,"categories"));
 
 let katHTML = `<option value="">Kategori seç</option>`;
+let kategoriMap = {};
 
 katSnap.forEach(d=>{
   const k = d.data();
   katHTML += `<option value="${d.id}">${k.name}</option>`;
+  kategoriMap[d.id] = k.name;
 });
 
 document.getElementById("kategoriSec").innerHTML = katHTML;
 
-let kategoriMap = {};
-
-katSnap.forEach(d=>{
-  kategoriMap[d.id] = d.data().name;
-});
-  
+// 🔥 ÜRÜNLER
 const snap=await getDocs(collection(db,"products"));
 let h="";
 
 snap.forEach(d=>{
 const p=d.data();
+
 h+=`
 <div class="card">
 
 <div id="view_${d.id}">
   <b>${p.name}</b><br>
-<small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
+  <small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
   ${p.price}₺<br>
   <button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
   <button onclick="silUrun('${d.id}')">Sil</button>
@@ -285,14 +290,13 @@ h+=`
 <div id="edit_${d.id}" style="display:none">
 
   <input id="ad_${d.id}" value="${p.name}"><br>
-
   <input id="fiyat_${d.id}" value="${p.price}"><br>
 
-<select id="kdv_${d.id}">
-  <option value="0" ${(p.kdv ?? 0)==0?"selected":""}>KDV Yok</option>
-  <option value="10" ${p.kdv==10?"selected":""}>%10 KDV</option>
-  <option value="20" ${p.kdv==20?"selected":""}>%20 KDV</option>
-</select><br>
+  <select id="kdv_${d.id}">
+    <option value="0" ${(p.kdv ?? 0)==0?"selected":""}>KDV Yok</option>
+    <option value="10" ${p.kdv==10?"selected":""}>%10</option>
+    <option value="20" ${p.kdv==20?"selected":""}>%20</option>
+  </select><br>
 
   <select id="kat_${d.id}">
     ${Object.keys(kategoriMap).map(kid=>`
@@ -339,14 +343,11 @@ let imageURL = "";
 
 // 📸 FOTO
 if(file){
-
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
-
   await uploadBytes(fileRef, file);
   imageURL = await getDownloadURL(fileRef);
 }
 
-// 🔥 KAYDET
 await addDoc(collection(db,"products"),{
   name,
   price,
@@ -366,7 +367,7 @@ urun();
 }
 
 };
-
+  
 window.silUrun=async(id)=>{
 await deleteDoc(doc(db,"products",id));
 urun();
@@ -419,11 +420,6 @@ if(!ad || !fiyat){
   return;
 }
 
-if(!kategoriId){
-  alert("Kategori seç");
-  return;
-}
-
 let updateData = {
   name: ad,
   price: fiyat,
@@ -431,7 +427,7 @@ let updateData = {
   kdv: kdv
 };
 
-// 📸 FOTOĞRAF
+// 📸 FOTO GÜNCELLE
 if(file){
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
   await uploadBytes(fileRef, file);
@@ -451,7 +447,6 @@ urun();
 }
 
 };
-  
 // ================= SİPARİŞ =================
 function siparis(){
 
