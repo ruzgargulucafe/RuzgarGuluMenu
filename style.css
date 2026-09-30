@@ -1,68 +1,126 @@
 /* =========================
-GENEL
+GENEL ARKA PLAN
 ========================= */
 
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 20px;
-  background: #f4f6f9;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #fff;
 }
 
 /* =========================
-INPUT & BUTTON
+HEADER BUTONLAR
 ========================= */
 
-input, select {
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  width: 100%;
+.topButtons {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
 }
 
-button {
-  padding: 10px;
-  border-radius: 8px;
+.topButtons button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
   border: none;
   cursor: pointer;
-  transition: 0.2s;
 }
 
-button:hover {
-  opacity: 0.9;
+.garsonBtn {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+}
+
+.hesapBtn {
+  background: #374151;
+  color: #fff;
 }
 
 /* =========================
-KARTLAR
+KART GENEL
 ========================= */
 
 .card {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
   padding: 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  margin: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 /* =========================
-ÜRÜNLER
+ÜRÜN KARTI
 ========================= */
 
-.product {
+.productCard {
   display: flex;
-  justify-content: space-between;
+  gap: 15px;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  background: rgba(255,255,255,0.06);
+  padding: 10px;
+  border-radius: 12px;
 }
 
-.product h3 {
+/* FOTO */
+
+.productCard img {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* BİLGİ */
+
+.productInfo {
+  flex: 1;
+}
+
+.productInfo h3 {
   margin: 0;
+  font-size: 16px;
 }
 
-.product button {
-  background: #28a745;
-  color: white;
+.productInfo p {
+  margin: 3px 0;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* FİYAT */
+
+.productPrice {
+  font-weight: bold;
+  font-size: 16px;
+  color: #22c55e;
+}
+
+/* BUTON */
+
+.addBtn {
+  background: #22c55e;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+}
+
+/* =========================
+KATEGORİ
+========================= */
+
+.categoryHeader {
+  background: rgba(255,255,255,0.1);
+  padding: 12px;
+  border-radius: 10px;
+  margin: 10px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 /* =========================
@@ -72,90 +130,36 @@ SEPET
 .cartItem {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.cartButtons button {
-  margin-left: 5px;
-  padding: 5px 10px;
-}
-
-/* =========================
-SİPARİŞ KARTI
-========================= */
-
-.order {
-  border-radius: 12px;
-  padding: 15px;
   margin-bottom: 10px;
-  font-weight: 500;
-}
-
-/* DURUM RENKLERİ */
-
-.order.yeni {
-  background: #ffebee;
-  border-left: 6px solid #e53935;
-}
-
-.order.hazirlaniyor {
-  background: #fff3e0;
-  border-left: 6px solid #fb8c00;
-}
-
-.order.teslim {
-  background: #e8f5e9;
-  border-left: 6px solid #43a047;
 }
 
 /* =========================
-KATEGORİ
+TOPLAM PANEL
 ========================= */
 
-.categoryHeader {
-  background: #111;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 5px;
-}
-
-.categoryBody {
-  padding: 10px;
-  background: #fff;
-  border-radius: 8px;
-}
-
-/* =========================
-SEPET PANEL
-========================= */
-
-#cartPanel {
+.bottomBar {
   position: fixed;
-  right: -100%;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background: white;
+  bottom: 0;
+  width: 100%;
+  background: #111827;
   padding: 15px;
-  box-shadow: -5px 0 20px rgba(0,0,0,0.1);
-  transition: 0.3s;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
 }
-
-#cartPanel.active {
-  right: 0;
-}
-
-/* =========================
-TOPLAM
-========================= */
 
 #cartTotal {
   font-size: 18px;
   font-weight: bold;
+}
+
+.orderBtn {
+  width: 100%;
   margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  font-size: 16px;
 }
 
 /* =========================
@@ -164,17 +168,13 @@ RESPONSIVE
 
 @media (max-width: 768px) {
 
-  body {
-    padding: 10px;
+  .productCard {
+    flex-direction: row;
   }
 
-  .product {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #cartPanel {
-    width: 100%;
+  .productCard img {
+    width: 70px;
+    height: 70px;
   }
 
 }
