@@ -317,40 +317,54 @@ document.getElementById("list").innerHTML=h;
 
 window.ekleUrun = async()=>{
 
+try{
+
 const name = document.getElementById("u").value.trim();
 const price = Number(document.getElementById("f").value);
 const file = document.getElementById("resimFile").files[0];
 const kdv = Number(document.getElementById("kdv").value);
 const kategoriId = document.getElementById("kategoriSec").value;
 
-  if(!kategoriId){
+if(!kategoriId){
   alert("Kategori seç");
   return;
 }
-  
-if(name === "" || !price) return alert("Eksik bilgi");
+
+if(name === "" || !price){
+  alert("Eksik bilgi");
+  return;
+}
 
 let imageURL = "";
 
-// 📸 FOTO YÜKLE
+// 📸 FOTO
 if(file){
+
   const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
 
   await uploadBytes(fileRef, file);
   imageURL = await getDownloadURL(fileRef);
 }
 
-// 🔥 FIRESTORE'A KAYDET
+// 🔥 KAYDET
 await addDoc(collection(db,"products"),{
-  name: name,
-  price: price,
-  kdv: kdv,
+  name,
+  price,
+  kdv,
   categoryId: kategoriId,
   description: document.getElementById("aciklama").value,
   image: imageURL
 });
 
+alert("Ürün eklendi ✅");
+
 urun();
+
+}catch(e){
+  console.error(e);
+  alert("HATA: " + e.message);
+}
+
 };
 
 window.silUrun=async(id)=>{
