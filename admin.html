@@ -231,9 +231,6 @@ kategori();
 
 // ================= ÜRÜN =================
 async function urun(){
-<button onclick="tumUrunleriSil()" style="background:red;color:#fff">
-🚨 Tüm Ürünleri Sil
-</button><br><br>
 document.getElementById("app").innerHTML=`
 <input id="u" placeholder="Ad">
 <input id="f" placeholder="Fiyat">
@@ -245,6 +242,9 @@ document.getElementById("app").innerHTML=`
   <option value="20">%20 KDV</option>
 </select>
 <select id="kategoriSec"></select>
+<button onclick="tumUrunleriSil()" style="background:red;color:#fff">
+🚨 Tüm Ürünleri Sil
+</button><br><br>
 <button onclick="ekleUrun()">Ekle</button>
 <div id="list"></div>
 `;
