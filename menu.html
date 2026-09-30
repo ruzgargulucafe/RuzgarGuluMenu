@@ -233,8 +233,6 @@ body{
 
   <h3 id="cartTotal">Toplam: 0₺</h3>
 
-  <button class="send" onclick="siparis()">Siparişi Gönder</button>
-
   <!-- GARSON -->
   <button class="extraBtn callBtn" onclick="garson()">
     🛎 Garson Çağır
@@ -244,7 +242,44 @@ body{
   <button class="extraBtn billBtn" onclick="hesap()">
     💳 Hesap İste
   </button>
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 🔥 CANLI HESAP
+function hesapDinle(){
+
+  onSnapshot(collection(db,"orders"), (snap)=>{
+
+    let html = "";
+    let total = 0;
+
+    snap.forEach(d=>{
+      const o = d.data();
+
+      // SADECE BU MASA
+      if(o.table !== masa) return;
+
+      // SADECE AÇIK HESAP
+      if(o.closed === true) return;
+
+      (o.items || []).forEach(i=>{
+        html += `${i.name} x${i.qty}<br>`;
+        total += i.price * i.qty;
+      });
+
+    });
+
+    document.getElementById("cartItems").innerHTML =
+      html || "Henüz sipariş yok";
+
+    document.getElementById("cartTotal").innerText =
+      "Toplam: " + total + "₺";
+
+    document.getElementById("total").innerText =
+      "Toplam: " + total + "₺";
+
+  });
+
+}
 </div>
 
 <div class="cartBar">
@@ -254,6 +289,9 @@ body{
 
 <script type="module">
 
+  loadMenu();
+hesapDinle();
+  
 import { db } from "./app.js";
 import {
   collection,
