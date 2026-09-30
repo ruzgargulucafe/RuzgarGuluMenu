@@ -16,7 +16,6 @@ body{
   padding-bottom:120px;
 }
 
-/* HEADER */
 .header{
   height:220px;
   background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover no-repeat;
@@ -35,7 +34,10 @@ body{
   font-size:30px;
 }
 
-.masa{ opacity:0.8; margin-top:5px; }
+.masa{
+  opacity:0.8;
+  margin-top:5px;
+}
 
 .search{
   margin-top:15px;
@@ -45,7 +47,6 @@ body{
   border:none;
 }
 
-/* SEPET BUTON */
 .cartTop{
   position:absolute;
   top:15px;
@@ -58,7 +59,6 @@ body{
   font-weight:bold;
 }
 
-/* KATEGORİ */
 .kategoriBar{
   display:flex;
   overflow-x:auto;
@@ -72,7 +72,11 @@ body{
   background:white;
 }
 
-/* ÜRÜNLER */
+.kategoriBtn.active{
+  background:#ff9800;
+  color:white;
+}
+
 .products{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -92,7 +96,9 @@ body{
   object-fit:cover;
 }
 
-.cardContent{ padding:10px; }
+.cardContent{
+  padding:10px;
+}
 
 .bottom{
   display:flex;
@@ -100,52 +106,42 @@ body{
   align-items:center;
 }
 
-.price{ color:#ff9800; font-weight:bold; }
-
-/* ➕➖ BUTON */
-.qtyBox{
-  display:flex;
-  align-items:center;
-  gap:6px;
+.price{
+  color:#ff9800;
+  font-weight:bold;
 }
 
-.qtyBtn{
+.addBtn{
   background:#ff9800;
   border:none;
   color:white;
   border-radius:50%;
-  width:28px;
-  height:28px;
-  font-size:16px;
+  width:34px;
+  height:34px;
 }
 
-.qtyText{
-  font-weight:bold;
-}
-
-/* ALT BAR */
 .cartBar{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
   background:white;
-  padding:12px;
+  padding:15px;
   box-shadow:0 -4px 20px rgba(0,0,0,0.15);
 }
 
 .mainOrderBtn{
-  background:linear-gradient(45deg,#ff6a00,#ff9800);
+  background:linear-gradient(45deg,#ff7a00,#ff9800);
   color:white;
   width:100%;
   padding:16px;
   border:none;
   border-radius:14px;
-  font-size:16px;
   font-weight:bold;
+  font-size:16px;
+  margin-top:10px;
 }
 
-/* SEPET PANEL */
 .cartPanel{
   position:fixed;
   right:-100%;
@@ -155,25 +151,24 @@ body{
   background:white;
   padding:20px;
   transition:0.3s;
+  z-index:999;
 }
 
 .cartPanel.active{
   right:0;
 }
 
-.cartHeader{
-  display:flex;
-  justify-content:space-between;
-  font-size:20px;
-  margin-bottom:10px;
+.extraBtn{
+  width:100%;
+  margin-top:10px;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
 }
 
-.cartItem{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:8px;
-}
-
+.callBtn{ background:#ff9800; color:white; }
+.billBtn{ background:#333; color:white; }
 </style>
 </head>
 
@@ -194,13 +189,20 @@ body{
 
 <!-- SEPET -->
 <div id="cartPanel" class="cartPanel">
-  <div class="cartHeader">
-    🛒 Sepet
+
+  <div style="display:flex; justify-content:space-between;">
+    <b>🛒 Sepet</b>
     <span onclick="kapatSepet()">✖</span>
   </div>
 
   <div id="cartItems"></div>
+
   <h3 id="cartTotal">Toplam: 0₺</h3>
+
+  <!-- 🔥 BUTONLAR -->
+  <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
+  <button class="extraBtn billBtn" onclick="hesap()">💳 Hesap İste</button>
+
 </div>
 
 <!-- ALT -->
@@ -216,76 +218,75 @@ import {
   collection,
   getDocs,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const masa = new URLSearchParams(location.search).get("table");
 document.getElementById("masa").innerText = "Masa: " + masa;
 
-let kategoriler = [];
 let sepet = [];
+let kategoriler = [];
+let aktifKategori = null;
 
 // MENÜ
 async function loadMenu(){
-
   const urunSnap = await getDocs(collection(db,"products"));
   const katSnap = await getDocs(collection(db,"categories"));
 
   kategoriler = [];
 
   katSnap.forEach(d=>{
-    kategoriler.push({
-      id:d.id,
-      name:d.data().name,
-      items:[]
-    });
+    kategoriler.push({ id:d.id, name:d.data().name, items:[] });
   });
 
   urunSnap.forEach(d=>{
     const p = d.data();
     const kat = kategoriler.find(x=>x.id===p.categoryId);
-
     if(kat){
-      kat.items.push({
-        id:d.id,
-        ...p,
-        price:Number(p.price)
-      });
+      kat.items.push({ id:d.id, ...p, price:Number(p.price) });
     }
   });
 
+  kategoriUI();
   render();
 }
 
+// KATEGORİ
+function kategoriUI(){
+  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
+  kategoriler.forEach(k=>{
+    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
+  });
+  document.getElementById("kategoriBar").innerHTML = html;
+}
+
+window.filtre = (id)=>{ aktifKategori=id; render(); };
+
 // RENDER
 function render(){
-
+  let arama = document.getElementById("search").value.toLowerCase();
   let html = "";
 
   kategoriler.forEach(k=>{
+    let items = k.items.filter(p=>{
+      return (!aktifKategori || p.categoryId === aktifKategori)
+      && p.name.toLowerCase().includes(arama);
+    });
+
+    if(items.length===0) return;
 
     html += `<div class="products">`;
 
-    k.items.forEach(p=>{
-
-      const item = sepet.find(x=>x.id===p.id);
-      const qty = item ? item.qty : 0;
-
+    items.forEach(p=>{
       html += `
       <div class="card">
         <img src="${p.image || 'https://via.placeholder.com/300'}">
         <div class="cardContent">
           <h3>${p.name}</h3>
-
           <div class="bottom">
             <span class="price">${p.price}₺</span>
-
-            <div class="qtyBox">
-              <button class="qtyBtn" onclick="azalt('${p.id}')">-</button>
-              <span class="qtyText">${qty}</span>
-              <button class="qtyBtn" onclick="arttir('${p.id}','${p.name}',${p.price})">+</button>
-            </div>
-
+            <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
           </div>
         </div>
       </div>`;
@@ -297,68 +298,59 @@ function render(){
   document.getElementById("menu").innerHTML = html;
 }
 
-// ➕
-window.arttir = (id,name,price)=>{
-  const item = sepet.find(x=>x.id===id);
+document.getElementById("search").addEventListener("input", render);
 
-  if(item){
-    item.qty++;
-  }else{
-    sepet.push({id,name,price,qty:1});
-  }
 
-  guncelle();
-  render();
-};
 
-// ➖
-window.azalt = (id)=>{
-  const item = sepet.find(x=>x.id===id);
-  if(!item) return;
+// 🔥 BURASI SENİN ARADIĞIN (DOĞRU YER)
+function hesapDinle(){
 
-  item.qty--;
+  onSnapshot(collection(db,"orders"), (snap)=>{
 
-  if(item.qty <= 0){
-    sepet = sepet.filter(x=>x.id !== id);
-  }
+    let map = {};
+    let total = 0;
 
-  guncelle();
-  render();
-};
+    snap.forEach(d=>{
+      const o = d.data();
 
-// 🔄 SEPET
-function guncelle(){
+      if(!o) return;
+      if(o.table !== masa) return;
+      if(o.closed === true) return;
 
-  let html="";
-  let total=0;
+      (o.items || []).forEach(i=>{
+        if(!map[i.name]) map[i.name] = { qty:0, total:0 };
 
-  sepet.forEach(i=>{
-    html += `
-    <div class="cartItem">
-      ${i.name} x${i.qty}
-      <b>${i.price * i.qty}₺</b>
-    </div>
-    `;
-    total += i.price * i.qty;
+        map[i.name].qty += i.qty;
+        map[i.name].total += i.price * i.qty;
+
+        total += i.price * i.qty;
+      });
+
+    });
+
+    let html = "";
+
+    Object.keys(map).forEach(name=>{
+      html += `<div>${name} x${map[name].qty} - ${map[name].total}₺</div>`;
+    });
+
+    document.getElementById("cartItems").innerHTML =
+      html || "Henüz sipariş yok";
+
+    document.getElementById("cartTotal").innerText =
+      "Toplam: " + total + "₺";
+
+    document.getElementById("total").innerText =
+      "Toplam: " + total + "₺";
+
   });
 
-  document.getElementById("cartItems").innerHTML =
-    html || "Sepet boş";
-
-  document.getElementById("cartTotal").innerText =
-    "Toplam: " + total + "₺";
-
-  document.getElementById("total").innerText =
-    "Toplam: " + total + "₺";
 }
 
-// 🚀 SİPARİŞ
-window.siparis = async ()=>{
 
-  if(sepet.length===0){
-    alert("Sepet boş");
-    return;
-  }
+// SİPARİŞ
+window.siparis = async ()=>{
+  if(sepet.length===0) return alert("Sepet boş");
 
   let total=0;
   sepet.forEach(i=> total += i.price*i.qty);
@@ -367,15 +359,30 @@ window.siparis = async ()=>{
     table: masa,
     items: sepet,
     total,
-    status:"Bekliyor",
+    closed:false,
     createdAt: serverTimestamp()
   });
 
   alert("Sipariş gönderildi");
-
   sepet=[];
-  guncelle();
-  render();
+};
+
+// GARSON
+window.garson = async ()=>{
+  await addDoc(collection(db,"calls"),{
+    table: masa,
+    createdAt: serverTimestamp()
+  });
+  alert("Garson geliyor");
+};
+
+// HESAP
+window.hesap = async ()=>{
+  await addDoc(collection(db,"billRequests"),{
+    table: masa,
+    createdAt: serverTimestamp()
+  });
+  alert("Hesap istendi");
 };
 
 // PANEL
@@ -388,6 +395,7 @@ window.kapatSepet = ()=>{
 };
 
 loadMenu();
+hesapDinle();
 
 </script>
 
