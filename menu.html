@@ -9,12 +9,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Pacifico&display=swap" rel="stylesheet">
 
 <style>
+
 body{
   margin:0;
   font-family:'Poppins',sans-serif;
   background:#f3f3f3;
 }
 
+/* HEADER */
 .header{
   height:220px;
   background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover no-repeat;
@@ -46,6 +48,7 @@ body{
   border:none;
 }
 
+/* SEPET BUTONU */
 .cartTop{
   position:absolute;
   top:15px;
@@ -58,6 +61,7 @@ body{
   font-weight:bold;
 }
 
+/* KATEGORİ */
 .kategoriBar{
   display:flex;
   overflow-x:auto;
@@ -77,6 +81,7 @@ body{
   color:white;
 }
 
+/* ÜRÜNLER */
 .products{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -127,16 +132,37 @@ body{
   height:32px;
 }
 
+/* ALT BAR */
 .cartBar{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
   background:white;
-  padding:10px;
-  box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+  padding:12px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
+  z-index:999;
 }
 
+/* 🚀 BÜYÜK BUTON */
+.mainOrderBtn{
+  background: linear-gradient(45deg,#ff6a00,#ff9800);
+  color:white;
+  width:100%;
+  padding:18px;
+  border:none;
+  border-radius:14px;
+  font-size:18px;
+  font-weight:700;
+  margin-top:10px;
+  box-shadow:0 6px 15px rgba(0,0,0,0.25);
+}
+
+.mainOrderBtn:active{
+  transform:scale(0.97);
+}
+
+/* SEPET PANEL */
 .cartPanel{
   position:fixed;
   right:-100%;
@@ -160,6 +186,7 @@ body{
   margin-bottom:10px;
 }
 
+/* EXTRA */
 .extraBtn{
   width:100%;
   margin-top:10px;
@@ -178,6 +205,7 @@ body{
   background:#333;
   color:white;
 }
+
 </style>
 </head>
 
@@ -198,6 +226,7 @@ body{
 
 <!-- SEPET PANEL -->
 <div id="cartPanel" class="cartPanel">
+
   <div class="cartHeader">
     🛒 Sepet
     <span onclick="kapatSepet()">✖</span>
@@ -208,14 +237,16 @@ body{
 
   <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
   <button class="extraBtn billBtn" onclick="hesap()">💳 Hesap İste</button>
+
 </div>
 
+<!-- ALT BAR -->
 <div class="cartBar">
   <h3 id="total">Toplam: 0₺</h3>
 
   <button class="mainOrderBtn" onclick="siparis()">
-  🚀 Siparişi Gönder
-</button>
+    🚀 Siparişi Gönder
+  </button>
 </div>
 
 <script type="module">
@@ -232,7 +263,6 @@ import {
 const masa = new URLSearchParams(location.search).get("table");
 document.getElementById("masa").innerText = "Masa: " + masa;
 
-let sepet = [];
 let kategoriler = [];
 let aktifKategori = null;
 
@@ -341,11 +371,8 @@ function hesapDinle(){
       if(o.closed === true) return;
 
       (o.items || []).forEach(i=>{
-        const fiyat = Number(i.price) || 0;
-        const adet = Number(i.qty) || 0;
-
-        html += `${i.name} x${adet}<br>`;
-        total += fiyat * adet;
+        total += (Number(i.price)||0) * (Number(i.qty)||0);
+        html += `${i.name} x${i.qty}<br>`;
       });
 
     });
