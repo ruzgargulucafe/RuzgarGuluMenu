@@ -321,8 +321,6 @@ document.getElementById("list").innerHTML=h;
 
 window.ekleUrun = async()=>{
 
-try{
-
 const name = document.getElementById("u").value.trim();
 const price = Number(document.getElementById("f").value);
 const file = document.getElementById("resimFile").files[0];
@@ -341,13 +339,30 @@ if(name === "" || !price){
 
 let imageURL = "";
 
-// 📸 FOTO
+// 🔥 CLOUDINARY YÜKLE
 if(file){
-  const fileRef = ref(storage, "urunler/" + Date.now() + "_" + file.name);
-  await uploadBytes(fileRef, file);
-  imageURL = await getDownloadURL(fileRef);
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "urunler");
+
+  const res = await fetch("https://api.cloudinary.com/v1_1/uahcjlsb/image/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if(!data.secure_url){
+    alert("Foto yüklenemedi ❌");
+    console.log(data);
+    return;
+  }
+
+  imageURL = data.secure_url;
 }
 
+// 🔥 FIRESTORE
 await addDoc(collection(db,"products"),{
   name,
   price,
@@ -360,12 +375,6 @@ await addDoc(collection(db,"products"),{
 alert("Ürün eklendi ✅");
 
 urun();
-
-}catch(e){
-  console.error(e);
-  alert("HATA: " + e.message);
-}
-
 };
   
 window.silUrun=async(id)=>{
