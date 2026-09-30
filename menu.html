@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Pacifico&display=swap" rel="stylesheet">
 
 <style>
-
 body{
   margin:0;
   font-family:'Poppins',sans-serif;
   background:#f3f3f3;
+  padding-bottom:120px;
 }
 
 /* HEADER */
@@ -35,10 +35,7 @@ body{
   font-size:30px;
 }
 
-.masa{
-  opacity:0.8;
-  margin-top:5px;
-}
+.masa{ opacity:0.8; margin-top:5px; }
 
 .search{
   margin-top:15px;
@@ -48,7 +45,7 @@ body{
   border:none;
 }
 
-/* SEPET BUTONU */
+/* SEPET BUTON */
 .cartTop{
   position:absolute;
   top:15px;
@@ -73,12 +70,6 @@ body{
   padding:10px 15px;
   border-radius:20px;
   background:white;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-.kategoriBtn.active{
-  background:#ff9800;
-  color:white;
 }
 
 /* ÜRÜNLER */
@@ -93,7 +84,6 @@ body{
   background:white;
   border-radius:14px;
   overflow:hidden;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
 .card img{
@@ -102,34 +92,35 @@ body{
   object-fit:cover;
 }
 
-.cardContent{
-  padding:10px;
-}
-
-.cardContent h3{
-  margin:0;
-  font-size:15px;
-}
+.cardContent{ padding:10px; }
 
 .bottom{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-top:8px;
 }
 
-.price{
-  color:#ff9800;
-  font-weight:bold;
+.price{ color:#ff9800; font-weight:bold; }
+
+/* ➕➖ BUTON */
+.qtyBox{
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 
-.addBtn{
+.qtyBtn{
   background:#ff9800;
   border:none;
   color:white;
   border-radius:50%;
-  width:32px;
-  height:32px;
+  width:28px;
+  height:28px;
+  font-size:16px;
+}
+
+.qtyText{
+  font-weight:bold;
 }
 
 /* ALT BAR */
@@ -141,25 +132,17 @@ body{
   background:white;
   padding:12px;
   box-shadow:0 -4px 20px rgba(0,0,0,0.15);
-  z-index:999;
 }
 
-/* 🚀 BÜYÜK BUTON */
 .mainOrderBtn{
-  background: linear-gradient(45deg,#ff6a00,#ff9800);
+  background:linear-gradient(45deg,#ff6a00,#ff9800);
   color:white;
   width:100%;
-  padding:18px;
+  padding:16px;
   border:none;
   border-radius:14px;
-  font-size:18px;
-  font-weight:700;
-  margin-top:10px;
-  box-shadow:0 6px 15px rgba(0,0,0,0.25);
-}
-
-.mainOrderBtn:active{
-  transform:scale(0.97);
+  font-size:16px;
+  font-weight:bold;
 }
 
 /* SEPET PANEL */
@@ -172,7 +155,6 @@ body{
   background:white;
   padding:20px;
   transition:0.3s;
-  z-index:999;
 }
 
 .cartPanel.active{
@@ -186,24 +168,10 @@ body{
   margin-bottom:10px;
 }
 
-/* EXTRA */
-.extraBtn{
-  width:100%;
-  margin-top:10px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.callBtn{
-  background:#ff9800;
-  color:white;
-}
-
-.billBtn{
-  background:#333;
-  color:white;
+.cartItem{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
 }
 
 </style>
@@ -224,9 +192,8 @@ body{
 <div class="kategoriBar" id="kategoriBar"></div>
 <div id="menu"></div>
 
-<!-- SEPET PANEL -->
+<!-- SEPET -->
 <div id="cartPanel" class="cartPanel">
-
   <div class="cartHeader">
     🛒 Sepet
     <span onclick="kapatSepet()">✖</span>
@@ -234,19 +201,12 @@ body{
 
   <div id="cartItems"></div>
   <h3 id="cartTotal">Toplam: 0₺</h3>
-
-  <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
-  <button class="extraBtn billBtn" onclick="hesap()">💳 Hesap İste</button>
-
 </div>
 
-<!-- ALT BAR -->
+<!-- ALT -->
 <div class="cartBar">
   <h3 id="total">Toplam: 0₺</h3>
-
-  <button class="mainOrderBtn" onclick="siparis()">
-    🚀 Siparişi Gönder
-  </button>
+  <button class="mainOrderBtn" onclick="siparis()">🚀 Siparişi Gönder</button>
 </div>
 
 <script type="module">
@@ -256,15 +216,14 @@ import {
   collection,
   getDocs,
   addDoc,
-  serverTimestamp,
-  onSnapshot
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const masa = new URLSearchParams(location.search).get("table");
 document.getElementById("masa").innerText = "Masa: " + masa;
 
 let kategoriler = [];
-let aktifKategori = null;
+let sepet = [];
 
 // MENÜ
 async function loadMenu(){
@@ -295,53 +254,38 @@ async function loadMenu(){
     }
   });
 
-  kategoriUI();
   render();
 }
-
-// KATEGORİ
-function kategoriUI(){
-  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
-
-  kategoriler.forEach(k=>{
-    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
-  });
-
-  document.getElementById("kategoriBar").innerHTML = html;
-}
-
-// FİLTRE
-window.filtre = (id)=>{
-  aktifKategori = id;
-  render();
-};
 
 // RENDER
 function render(){
 
-  let arama = document.getElementById("search").value.toLowerCase();
   let html = "";
 
   kategoriler.forEach(k=>{
 
-    let items = k.items.filter(p=>{
-      return (!aktifKategori || p.categoryId === aktifKategori)
-      && p.name.toLowerCase().includes(arama);
-    });
-
-    if(items.length===0) return;
-
     html += `<div class="products">`;
 
-    items.forEach(p=>{
+    k.items.forEach(p=>{
+
+      const item = sepet.find(x=>x.id===p.id);
+      const qty = item ? item.qty : 0;
+
       html += `
       <div class="card">
         <img src="${p.image || 'https://via.placeholder.com/300'}">
         <div class="cardContent">
           <h3>${p.name}</h3>
+
           <div class="bottom">
             <span class="price">${p.price}₺</span>
-            <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
+
+            <div class="qtyBox">
+              <button class="qtyBtn" onclick="azalt('${p.id}')">-</button>
+              <span class="qtyText">${qty}</span>
+              <button class="qtyBtn" onclick="arttir('${p.id}','${p.name}',${p.price})">+</button>
+            </div>
+
           </div>
         </div>
       </div>`;
@@ -353,59 +297,85 @@ function render(){
   document.getElementById("menu").innerHTML = html;
 }
 
-document.getElementById("search").addEventListener("input", render);
+// ➕
+window.arttir = (id,name,price)=>{
+  const item = sepet.find(x=>x.id===id);
 
-// 🔥 CANLI HESAP
-function hesapDinle(){
+  if(item){
+    item.qty++;
+  }else{
+    sepet.push({id,name,price,qty:1});
+  }
 
-  onSnapshot(collection(db,"orders"), (snap)=>{
-
-    let html = "";
-    let total = 0;
-
-    snap.forEach(d=>{
-      const o = d.data();
-
-      if(!o) return;
-      if(o.table !== masa) return;
-      if(o.closed === true) return;
-
-      (o.items || []).forEach(i=>{
-        total += (Number(i.price)||0) * (Number(i.qty)||0);
-        html += `${i.name} x${i.qty}<br>`;
-      });
-
-    });
-
-    document.getElementById("cartItems").innerHTML =
-      html || "Henüz sipariş yok";
-
-    document.getElementById("cartTotal").innerText =
-      "Toplam: " + total + "₺";
-
-    document.getElementById("total").innerText =
-      "Toplam: " + total + "₺";
-
-  });
-
-}
-
-// GARSON
-window.garson = async ()=>{
-  await addDoc(collection(db,"calls"),{
-    table: masa,
-    createdAt: serverTimestamp()
-  });
-  alert("Garson geliyor");
+  guncelle();
+  render();
 };
 
-// HESAP
-window.hesap = async ()=>{
-  await addDoc(collection(db,"billRequests"),{
+// ➖
+window.azalt = (id)=>{
+  const item = sepet.find(x=>x.id===id);
+  if(!item) return;
+
+  item.qty--;
+
+  if(item.qty <= 0){
+    sepet = sepet.filter(x=>x.id !== id);
+  }
+
+  guncelle();
+  render();
+};
+
+// 🔄 SEPET
+function guncelle(){
+
+  let html="";
+  let total=0;
+
+  sepet.forEach(i=>{
+    html += `
+    <div class="cartItem">
+      ${i.name} x${i.qty}
+      <b>${i.price * i.qty}₺</b>
+    </div>
+    `;
+    total += i.price * i.qty;
+  });
+
+  document.getElementById("cartItems").innerHTML =
+    html || "Sepet boş";
+
+  document.getElementById("cartTotal").innerText =
+    "Toplam: " + total + "₺";
+
+  document.getElementById("total").innerText =
+    "Toplam: " + total + "₺";
+}
+
+// 🚀 SİPARİŞ
+window.siparis = async ()=>{
+
+  if(sepet.length===0){
+    alert("Sepet boş");
+    return;
+  }
+
+  let total=0;
+  sepet.forEach(i=> total += i.price*i.qty);
+
+  await addDoc(collection(db,"orders"),{
     table: masa,
+    items: sepet,
+    total,
+    status:"Bekliyor",
     createdAt: serverTimestamp()
   });
-  alert("Hesap istendi");
+
+  alert("Sipariş gönderildi");
+
+  sepet=[];
+  guncelle();
+  render();
 };
 
 // PANEL
@@ -418,7 +388,6 @@ window.kapatSepet = ()=>{
 };
 
 loadMenu();
-hesapDinle();
 
 </script>
 
