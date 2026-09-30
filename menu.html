@@ -167,6 +167,10 @@ body{
     <div class="masa" id="masa"></div>
     <input id="search" class="search" placeholder="🔍 Ürün ara...">
   </div>
+  <button onclick="acSepet()" style="margin-top:10px;padding:8px;border:none;border-radius:10px;">
+🛒 Sepet
+</button>
+  
 </div>
 
 <!-- KATEGORİ -->
@@ -324,9 +328,18 @@ window.ekle = (id,name,price)=>{
 };
 
 function guncelle(){
-  let total = 0;
-  sepet.forEach(i=> total += i.price * i.qty);
+
+  let html="";
+  let total=0;
+
+  sepet.forEach(i=>{
+    html += `${i.name} x ${i.qty}<br>`;
+    total += i.price * i.qty;
+  });
+
   document.getElementById("total").innerText = "Toplam: " + total + "₺";
+  document.getElementById("cartItems").innerHTML = html;
+  document.getElementById("cartTotal").innerText = "Toplam: " + total + "₺";
 }
 
 // SİPARİŞ
@@ -348,7 +361,14 @@ window.siparis = async ()=>{
   sepet=[];
   guncelle();
 };
+window.acSepet = ()=>{
+  document.getElementById("cartPanel").classList.add("active");
+};
 
+window.kapatSepet = ()=>{
+  document.getElementById("cartPanel").classList.remove("active");
+};
+  
 loadMenu();
 
 </script>
