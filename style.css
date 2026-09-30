@@ -173,8 +173,20 @@ body{
   left:0;
   right:0;
   background:white;
-  padding:12px;
+  padding:10px;
   box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+  z-index:999;
+}
+
+.mainOrderBtn{
+  background:linear-gradient(45deg,#007bff,#4da3ff);
+  color:white;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  margin-top:8px;
 }
 
 /* GÖNDER */
