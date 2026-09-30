@@ -3,152 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>QR Menü</title>
 
 <style>
-
-/* 🌙 ARKA PLAN */
 body{
   margin:0;
-  font-family:'Segoe UI', sans-serif;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
+  font-family: 'Segoe UI', sans-serif;
+  background:#f3f3f3;
+}
+
+/* HEADER */
+.header{
+  height:230px;
+  background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover;
+  position:relative;
+}
+
+.overlay{
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.4);
+  height:100%;
+  padding:20px;
   color:white;
 }
 
-/* 🔝 ÜST BAR */
-.top{
-  background:#111;
-  padding:15px;
-  text-align:center;
+.logo{
+  font-size:26px;
   font-weight:bold;
 }
 
-/* 🔘 BUTONLAR */
-.actions{
-  display:flex;
-  gap:10px;
-  padding:10px;
+.masa{
+  margin-top:5px;
+  opacity:0.8;
 }
 
-.actions button{
-  flex:1;
+.search{
+  margin-top:15px;
+  width:100%;
   padding:12px;
+  border-radius:25px;
   border:none;
-  border-radius:10px;
+  outline:none;
+}
+
+/* KATEGORİ */
+.kategoriBar{
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+  padding:10px;
+}
+
+.kategoriBtn{
+  padding:10px 15px;
+  border-radius:20px;
+  background:white;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  cursor:pointer;
+}
+
+.kategoriBtn.active{
+  background:#ff9800;
   color:white;
+}
+
+/* BAŞLIK */
+.sectionTitle{
+  padding:10px;
+  font-size:18px;
   font-weight:bold;
 }
 
-.call{ background:#f59e0b; }
-.bill{ background:#374151; }
-
-/* 📦 KATEGORİ */
-.category{
-  margin:15px;
-}
-
-.category h2{
-  margin-bottom:10px;
-  border-left:4px solid #22c55e;
-  padding-left:10px;
-}
-
-/* 🍔 ÜRÜN KART */
-.productCard{
-  display:flex;
+/* ÜRÜNLER */
+.products{
+  display:grid;
+  grid-template-columns:1fr 1fr;
   gap:10px;
-  background:rgba(255,255,255,0.07);
   padding:10px;
-  border-radius:12px;
-  margin-bottom:10px;
-  align-items:center;
-  backdrop-filter:blur(10px);
 }
 
-/* 📸 FOTO */
-.productCard img{
-  width:80px;
-  height:80px;
-  border-radius:10px;
+.card{
+  background:white;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  transition:0.2s;
+}
+
+.card:hover{
+  transform:scale(1.02);
+}
+
+.card img{
+  width:100%;
+  height:120px;
   object-fit:cover;
 }
 
-/* 📝 BİLGİ */
-.info{
-  flex:1;
+.cardContent{
+  padding:10px;
 }
 
-.info h3{
+.cardContent h3{
   margin:0;
-  font-size:16px;
+}
+
+.cardContent p{
+  font-size:12px;
+  color:#777;
+}
+
+.bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .price{
-  color:#22c55e;
+  color:#ff9800;
   font-weight:bold;
 }
 
-/* ➕ BUTON */
-.productCard button{
-  background:#22c55e;
+.addBtn{
+  background:#ff9800;
   border:none;
   color:white;
-  padding:8px 12px;
-  border-radius:8px;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  font-size:18px;
 }
 
-/* 🧾 HESAP */
-.hesap{
-  background:rgba(255,255,255,0.08);
-  margin:10px;
-  padding:10px;
-  border-radius:12px;
-}
-
-/* 🛒 ALT BAR */
-.cart{
+/* SEPET */
+.cartBar{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
-  background:#111827;
+  background:white;
   padding:10px;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.1);
 }
 
-/* 🚀 SİPARİŞ */
 .send{
-  background:#3b82f6;
+  background:linear-gradient(45deg,#007bff,#4da3ff);
   color:white;
   width:100%;
-  padding:12px;
+  padding:14px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
+  font-weight:bold;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="top">
-  <h3 id="masa"></h3>
+<!-- HEADER -->
+<div class="header">
+  <div class="overlay">
+    <div class="logo">🌸 RüzgarGülü</div>
+    <div class="masa" id="masa"></div>
+    <input id="search" class="search" placeholder="🔍 Ürün ara...">
+  </div>
 </div>
 
-<div class="actions">
-  <button class="call" onclick="garson()">🛎 Garson</button>
-  <button class="bill" onclick="hesap()">💳 Hesap İste</button>
-</div>
+<!-- KATEGORİ -->
+<div class="kategoriBar" id="kategoriBar"></div>
 
-<div class="hesap">
-  <h3>🧾 Hesabım</h3>
-  <div id="hesapList">Henüz sipariş yok</div>
-  <h3 id="hesapTotal">Toplam: 0₺</h3>
-</div>
-
+<!-- ÜRÜNLER -->
 <div id="menu"></div>
 
-<div class="cart">
-  <div id="cartList"></div>
+<!-- SEPET -->
+<div class="cartBar">
   <h3 id="total">Toplam: 0₺</h3>
   <button class="send" onclick="siparis()">Siparişi Gönder</button>
 </div>
@@ -160,83 +188,122 @@ import {
   collection,
   getDocs,
   addDoc,
-  onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// MASA
 const masa = new URLSearchParams(location.search).get("table");
 
 if(!masa){
-  document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px'>QR ile giriş yapın</h2>";
+  document.body.innerHTML = "<h2>QR ile giriş yap</h2>";
   throw new Error("Masa yok");
 }
 
 document.getElementById("masa").innerText = "Masa: " + masa;
 
+// STATE
 let sepet = [];
+let tumUrunler = [];
+let aktifKategori = null;
 
-/* 🔥 MENÜ */
+// MENÜ YÜKLE
 async function loadMenu(){
 
-const urunSnap = await getDocs(collection(db,"products"));
-const katSnap = await getDocs(collection(db,"categories"));
+  const urunSnap = await getDocs(collection(db,"products"));
+  const katSnap = await getDocs(collection(db,"categories"));
 
-let kategoriler = {};
+  let kategoriler = {};
 
-katSnap.forEach(d=>{
-  kategoriler[d.id] = {
-    name: d.data().name,
-    items: []
-  };
-});
-
-urunSnap.forEach(d=>{
-  const p = d.data();
-
-  if(p.categoryId && kategoriler[p.categoryId]){
-    kategoriler[p.categoryId].items.push({
+  katSnap.forEach(d=>{
+    kategoriler[d.id] = {
       id: d.id,
-      ...p,
-      price: Number(p.price)
-    });
-  }
-});
-
-let html = "";
-
-Object.values(kategoriler).forEach(k=>{
-
-  if(k.items.length === 0) return;
-
-  html += `<div class="category"><h2>${k.name}</h2>`;
-
-  k.items.forEach(p=>{
-
-    html += `
-    <div class="productCard">
-
-      <img src="${p.image || 'https://via.placeholder.com/80'}">
-
-      <div class="info">
-        <h3>${p.name}</h3>
-        <div class="price">${p.price}₺</div>
-      </div>
-
-      <button onclick="ekle('${p.id}','${p.name}',${p.price})">
-        ➕
-      </button>
-
-    </div>
-    `;
+      name: d.data().name,
+      items: []
+    };
   });
 
-  html += `</div>`;
-});
+  urunSnap.forEach(d=>{
+    const p = d.data();
 
-document.getElementById("menu").innerHTML = html;
+    if(p.categoryId && kategoriler[p.categoryId]){
+      const urun = {
+        id:d.id,
+        ...p,
+        price:Number(p.price)
+      };
+
+      kategoriler[p.categoryId].items.push(urun);
+      tumUrunler.push(urun);
+    }
+  });
+
+  kategoriUI(Object.values(kategoriler));
+  render(Object.values(kategoriler));
 }
 
-/* ➕ SEPET */
+// KATEGORİ BAR
+function kategoriUI(katlar){
+  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
+
+  katlar.forEach(k=>{
+    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
+  });
+
+  document.getElementById("kategoriBar").innerHTML = html;
+}
+
+// FİLTRE
+window.filtre = (id)=>{
+  aktifKategori = id;
+  loadMenu();
+};
+
+// RENDER
+function render(katlar){
+
+  let arama = document.getElementById("search").value.toLowerCase();
+
+  let html = "";
+
+  katlar.forEach(k=>{
+
+    let items = k.items.filter(p=>{
+      return (!aktifKategori || p.categoryId === aktifKategori)
+      && p.name.toLowerCase().includes(arama);
+    });
+
+    if(items.length === 0) return;
+
+    html += `<div class="sectionTitle">${k.name}</div>`;
+    html += `<div class="products">`;
+
+    items.forEach(p=>{
+      html += `
+      <div class="card">
+        <img src="${p.image || 'https://via.placeholder.com/300'}">
+        <div class="cardContent">
+          <h3>${p.name}</h3>
+          <p>${p.description || ""}</p>
+
+          <div class="bottom">
+            <span class="price">${p.price}₺</span>
+            <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
+          </div>
+        </div>
+      </div>
+      `;
+    });
+
+    html += `</div>`;
+  });
+
+  document.getElementById("menu").innerHTML = html;
+}
+
+// ARAMA
+document.getElementById("search").addEventListener("input", loadMenu);
+
+// SEPET
 window.ekle = (id,name,price)=>{
   const item = sepet.find(x=>x.id===id);
   if(item) item.qty++;
@@ -244,26 +311,15 @@ window.ekle = (id,name,price)=>{
   guncelle();
 };
 
-/* 🔄 SEPET */
 function guncelle(){
-  let html="";
-  let total=0;
-
-  sepet.forEach(i=>{
-    html += `${i.name} x${i.qty}<br>`;
-    total += i.price * i.qty;
-  });
-
-  document.getElementById("cartList").innerHTML = html;
+  let total = 0;
+  sepet.forEach(i=> total += i.price * i.qty);
   document.getElementById("total").innerText = "Toplam: " + total + "₺";
 }
 
-/* 📦 SİPARİŞ */
+// SİPARİŞ
 window.siparis = async ()=>{
-  if(sepet.length===0){
-    alert("Sepet boş");
-    return;
-  }
+  if(sepet.length===0) return alert("Sepet boş");
 
   let total=0;
   sepet.forEach(i=> total += i.price*i.qty);
@@ -271,9 +327,8 @@ window.siparis = async ()=>{
   await addDoc(collection(db,"orders"),{
     table: masa,
     items: sepet,
-    total: total,
-    status: "Bekliyor",
-    closed: false,
+    total,
+    status:"Bekliyor",
     createdAt: serverTimestamp()
   });
 
@@ -282,73 +337,7 @@ window.siparis = async ()=>{
   guncelle();
 };
 
-/* 🛎 GARSON */
-window.garson = async ()=>{
-  await addDoc(collection(db,"calls"),{
-    table: masa,
-    createdAt: serverTimestamp()
-  });
-  alert("Garson geliyor");
-};
-
-/* 💳 HESAP */
-window.hesap = async ()=>{
-  const snap = await getDocs(collection(db,"orders"));
-
-  let total = 0;
-  let items = [];
-
-  snap.forEach(d=>{
-    const o = d.data();
-
-    if(o.table === masa && !o.closed){
-      total += o.total || 0;
-      (o.items || []).forEach(i=>{
-        items.push(i.name + " x" + i.qty);
-      });
-    }
-  });
-
-  await addDoc(collection(db,"billRequests"),{
-    table: masa,
-    total,
-    items,
-    createdAt: serverTimestamp()
-  });
-
-  alert("Hesap istendi");
-};
-
-/* 🔥 CANLI HESAP */
-function hesapYukle(){
-  onSnapshot(collection(db,"orders"), (snap)=>{
-
-    let html = "";
-    let total = 0;
-
-    snap.forEach(d=>{
-      const o = d.data();
-
-      if(o.table !== masa) return;
-      if(o.closed === true) return;
-
-      (o.items || []).forEach(i=>{
-        html += `${i.name} x${i.qty}<br>`;
-        total += i.price * i.qty;
-      });
-    });
-
-    document.getElementById("hesapList").innerHTML =
-      html || "Henüz sipariş yok";
-
-    document.getElementById("hesapTotal").innerText =
-      "Toplam: " + total + "₺";
-
-  });
-}
-
 loadMenu();
-hesapYukle();
 
 </script>
 
