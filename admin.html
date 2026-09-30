@@ -369,6 +369,26 @@ window.iptalUrun = (id)=>{
   document.getElementById("edit_"+id).style.display="none";
 };
 
+  window.tumUrunleriSil = async ()=>{
+
+  const onay = confirm("TÜM ÜRÜNLER SİLİNECEK! Emin misin?");
+  if(!onay) return;
+
+  const snap = await getDocs(collection(db,"products"));
+
+  const promises = [];
+
+  snap.forEach(d=>{
+    promises.push(deleteDoc(doc(db,"products",d.id)));
+  });
+
+  await Promise.all(promises);
+
+  alert("Tüm ürünler silindi ❌");
+
+  urun(); // listeyi yenile
+};
+  
 // 💾 GÜNCELLE
 window.guncelleUrun = async(id)=>{
 
