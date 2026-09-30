@@ -36,7 +36,6 @@ body{
 
 .masa{
   opacity:0.8;
-  margin-top:5px;
 }
 
 .search{
@@ -102,6 +101,7 @@ body{
 .bottom{
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
 .price{
@@ -109,13 +109,20 @@ body{
   font-weight:bold;
 }
 
-.addBtn{
-  background:#ff9800;
+/* + - */
+.qtyBox{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.qtyBtn{
+  width:28px;
+  height:28px;
   border:none;
+  background:#ff9800;
   color:white;
-  border-radius:50%;
-  width:34px;
-  height:34px;
+  border-radius:6px;
 }
 
 .cartBar{
@@ -125,10 +132,11 @@ body{
   right:0;
   background:white;
   padding:15px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
 }
 
 .mainOrderBtn{
-  background:linear-gradient(45deg,#ff7a00,#ff9800);
+  background:linear-gradient(45deg,#007bff,#004aad);
   color:white;
   width:100%;
   padding:16px;
@@ -137,6 +145,7 @@ body{
   font-weight:bold;
 }
 
+/* SEPET PANEL */
 .cartPanel{
   position:fixed;
   right:-100%;
@@ -153,17 +162,25 @@ body{
   right:0;
 }
 
+.cartHeader{
+  display:flex;
+  justify-content:space-between;
+  font-size:20px;
+}
+
+/* ekstra */
 .extraBtn{
   width:100%;
   margin-top:10px;
-  padding:14px;
+  padding:12px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   font-weight:bold;
 }
 
-.callBtn{ background:#ff9800; color:white; }
-.billBtn{ background:#333; color:white; }
+.callBtn{background:#ff9800;color:white;}
+.billBtn{background:#333;color:white;}
+
 </style>
 </head>
 
@@ -182,16 +199,15 @@ body{
 <div class="kategoriBar" id="kategoriBar"></div>
 <div id="menu"></div>
 
-<!-- SEPET -->
+<!-- SEPET PANEL -->
 <div id="cartPanel" class="cartPanel">
 
-  <div style="display:flex; justify-content:space-between;">
-    <b>🛒 Sepet</b>
+  <div class="cartHeader">
+    🧾 Hesabım
     <span onclick="kapatSepet()">✖</span>
   </div>
 
-  <div id="cartItems"></div>
-
+  <div id="cartItems">Henüz sipariş yok</div>
   <h3 id="cartTotal">Toplam: 0₺</h3>
 
   <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
@@ -212,55 +228,96 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  onSnapshot,
-  updateDoc,
-  doc
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const masa = new URLSearchParams(location.search).get("table");
 document.getElementById("masa").innerText = "Masa: " + masa;
 
-let sepet = [];
 let kategoriler = [];
+let aktifKategori = null;
+let secim = {}; // sadece geçici seçim
 
 // MENÜ
 async function loadMenu(){
+
   const urunSnap = await getDocs(collection(db,"products"));
   const katSnap = await getDocs(collection(db,"categories"));
 
   kategoriler = [];
 
   katSnap.forEach(d=>{
-    kategoriler.push({ id:d.id, name:d.data().name, items:[] });
+    kategoriler.push({
+      id:d.id,
+      name:d.data().name,
+      items:[]
+    });
   });
 
   urunSnap.forEach(d=>{
     const p = d.data();
     const kat = kategoriler.find(x=>x.id===p.categoryId);
+
     if(kat){
-      kat.items.push({ id:d.id, ...p, price:Number(p.price) });
+      kat.items.push({
+        id:d.id,
+        ...p,
+        price:Number(p.price)
+      });
     }
   });
 
+  kategoriUI();
   render();
 }
 
-// RENDER
+// kategori
+function kategoriUI(){
+  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
+  kategoriler.forEach(k=>{
+    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
+  });
+  document.getElementById("kategoriBar").innerHTML = html;
+}
+
+window.filtre = (id)=>{
+  aktifKategori = id;
+  render();
+};
+
+// ürünler
 function render(){
+
+  let arama = document.getElementById("search").value.toLowerCase();
   let html = "";
 
   kategoriler.forEach(k=>{
+
+    let items = k.items.filter(p=>{
+      return (!aktifKategori || p.categoryId === aktifKategori)
+      && p.name.toLowerCase().includes(arama);
+    });
+
+    if(items.length===0) return;
+
     html += `<div class="products">`;
 
-    k.items.forEach(p=>{
+    items.forEach(p=>{
       html += `
       <div class="card">
         <img src="${p.image || 'https://via.placeholder.com/300'}">
         <div class="cardContent">
           <h3>${p.name}</h3>
+
           <div class="bottom">
             <span class="price">${p.price}₺</span>
-            <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
+
+            <div class="qtyBox">
+              <button class="qtyBtn" onclick="azalt('${p.id}')">-</button>
+              <span id="qty_${p.id}">${secim[p.id] || 0}</span>
+              <button class="qtyBtn" onclick="arttir('${p.id}')">+</button>
+            </div>
+
           </div>
         </div>
       </div>`;
@@ -272,106 +329,93 @@ function render(){
   document.getElementById("menu").innerHTML = html;
 }
 
-// SEPET EKLE
-window.ekle = (id,name,price)=>{
-  const item = sepet.find(x=>x.id===id);
-  if(item) item.qty++;
-  else sepet.push({id,name,price,qty:1});
-  alert(name + " eklendi");
+document.getElementById("search").addEventListener("input", render);
+
+// + -
+window.arttir = (id)=>{
+  secim[id] = (secim[id] || 0) + 1;
+  document.getElementById("qty_"+id).innerText = secim[id];
 };
 
-// SİPARİŞ
-window.siparis = async ()=>{
-  if(sepet.length===0) return alert("Sepet boş");
+window.azalt = (id)=>{
+  if(!secim[id]) return;
+  secim[id]--;
+  document.getElementById("qty_"+id).innerText = secim[id] || 0;
+};
 
-  let total=0;
-  sepet.forEach(i=> total += i.price*i.qty);
+// sipariş
+window.siparis = async ()=>{
+
+  let items = [];
+  let total = 0;
+
+  for(let id in secim){
+
+    const urun = kategoriler.flatMap(k=>k.items).find(p=>p.id===id);
+
+    if(!urun) continue;
+
+    items.push({
+      id:urun.id,
+      name:urun.name,
+      price:urun.price,
+      qty:secim[id]
+    });
+
+    total += urun.price * secim[id];
+  }
+
+  if(items.length===0){
+    return alert("Ürün seçmediniz");
+  }
 
   await addDoc(collection(db,"orders"),{
     table: masa,
-    items: sepet,
+    items,
     total,
     closed:false,
     createdAt: serverTimestamp()
   });
 
   alert("Sipariş gönderildi");
-  sepet=[];
+
+  secim = {};
+  render();
 };
 
-// 🔥 MASA HESABI CANLI
+// 🔥 CANLI HESAP
 function hesapDinle(){
 
   onSnapshot(collection(db,"orders"), (snap)=>{
 
-    let map = {};
+    let html = "";
     let total = 0;
 
     snap.forEach(d=>{
       const o = d.data();
-      if(!o || o.table !== masa || o.closed) return;
+
+      if(o.table !== masa) return;
+      if(o.closed === true) return;
 
       (o.items || []).forEach(i=>{
-        if(!map[i.name]) map[i.name] = { qty:0, total:0 };
-
-        map[i.name].qty += i.qty;
-        map[i.name].total += i.price * i.qty;
-
+        html += `${i.name} x${i.qty}<br>`;
         total += i.price * i.qty;
       });
     });
 
-    let html = "";
+    document.getElementById("cartItems").innerHTML =
+      html || "Henüz sipariş yok";
 
-    Object.keys(map).forEach(name=>{
-      html += `
-      <div style="display:flex;justify-content:space-between;">
-        <span>${name} x${map[name].qty}</span>
-        <div>
-          <button onclick="azalt('${name}')">➖</button>
-          <button onclick="arttir('${name}')">➕</button>
-        </div>
-      </div>`;
-    });
+    document.getElementById("cartTotal").innerText =
+      "Toplam: " + total + "₺";
 
-    document.getElementById("cartItems").innerHTML = html || "Henüz sipariş yok";
-    document.getElementById("cartTotal").innerText = "Toplam: " + total + "₺";
-    document.getElementById("total").innerText = "Toplam: " + total + "₺";
+    document.getElementById("total").innerText =
+      "Toplam: " + total + "₺";
   });
+
 }
 
-// ➕ ➖ GÜNCELLE
-window.arttir = async (urun)=>{
-  const snap = await getDocs(collection(db,"orders"));
-  snap.forEach(async d=>{
-    const o = d.data();
-    if(o.table !== masa || o.closed) return;
-
-    let items = o.items.map(i=>{
-      if(i.name===urun) i.qty++;
-      return i;
-    });
-
-    await updateDoc(doc(db,"orders",d.id),{items});
-  });
-};
-
-window.azalt = async (urun)=>{
-  const snap = await getDocs(collection(db,"orders"));
-  snap.forEach(async d=>{
-    const o = d.data();
-    if(o.table !== masa || o.closed) return;
-
-    let items = o.items.map(i=>{
-      if(i.name===urun) i.qty--;
-      return i;
-    }).filter(i=>i.qty>0);
-
-    await updateDoc(doc(db,"orders",d.id),{items});
-  });
-};
-
-// GARSON
+// garson
 window.garson = async ()=>{
   await addDoc(collection(db,"calls"),{
     table: masa,
@@ -380,7 +424,7 @@ window.garson = async ()=>{
   alert("Garson geliyor");
 };
 
-// HESAP
+// hesap
 window.hesap = async ()=>{
   await addDoc(collection(db,"billRequests"),{
     table: masa,
@@ -389,7 +433,7 @@ window.hesap = async ()=>{
   alert("Hesap istendi");
 };
 
-// PANEL
+// panel
 window.acSepet = ()=> document.getElementById("cartPanel").classList.add("active");
 window.kapatSepet = ()=> document.getElementById("cartPanel").classList.remove("active");
 
