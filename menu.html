@@ -288,9 +288,6 @@ function hesapDinle(){
 </div>
 
 <script type="module">
-
-  loadMenu();
-hesapDinle();
   
 import { db } from "./app.js";
 import {
@@ -467,7 +464,8 @@ window.kapatSepet = ()=>{
   document.getElementById("cartPanel").classList.remove("active");
 };
 
-loadMenu();
+  loadMenu();
+hesapDinle();
 
 </script>
 
