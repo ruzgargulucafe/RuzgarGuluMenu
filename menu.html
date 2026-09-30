@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>QR Menü</title>
 
 <style>
 body{
   margin:0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family:'Segoe UI',sans-serif;
   background:#f3f3f3;
 }
 
@@ -19,7 +18,6 @@ body{
   background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover;
   position:relative;
 }
-
 .overlay{
   backdrop-filter: blur(6px);
   background: rgba(0,0,0,0.4);
@@ -27,24 +25,14 @@ body{
   padding:20px;
   color:white;
 }
-
-.logo{
-  font-size:26px;
-  font-weight:bold;
-}
-
-.masa{
-  margin-top:5px;
-  opacity:0.8;
-}
-
+.logo{font-size:26px;font-weight:bold;}
+.masa{margin-top:5px;opacity:0.8;}
 .search{
   margin-top:15px;
   width:100%;
   padding:12px;
   border-radius:25px;
   border:none;
-  outline:none;
 }
 
 /* KATEGORİ */
@@ -54,25 +42,14 @@ body{
   gap:10px;
   padding:10px;
 }
-
 .kategoriBtn{
   padding:10px 15px;
   border-radius:20px;
   background:white;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-  cursor:pointer;
 }
-
 .kategoriBtn.active{
   background:#ff9800;
   color:white;
-}
-
-/* BAŞLIK */
-.sectionTitle{
-  padding:10px;
-  font-size:18px;
-  font-weight:bold;
 }
 
 /* ÜRÜNLER */
@@ -82,49 +59,24 @@ body{
   gap:10px;
   padding:10px;
 }
-
 .card{
   background:white;
   border-radius:12px;
   overflow:hidden;
   box-shadow:0 4px 10px rgba(0,0,0,0.1);
-  transition:0.2s;
 }
-
-.card:hover{
-  transform:scale(1.02);
-}
-
 .card img{
   width:100%;
   height:120px;
   object-fit:cover;
 }
-
-.cardContent{
-  padding:10px;
-}
-
-.cardContent h3{
-  margin:0;
-}
-
-.cardContent p{
-  font-size:12px;
-  color:#777;
-}
-
+.cardContent{padding:10px;}
 .bottom{
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-
-.price{
-  color:#ff9800;
-  font-weight:bold;
-}
-
+.price{color:#ff9800;font-weight:bold;}
 .addBtn{
   background:#ff9800;
   border:none;
@@ -132,10 +84,9 @@ body{
   border-radius:50%;
   width:32px;
   height:32px;
-  font-size:18px;
 }
 
-/* SEPET */
+/* SEPET ALT BAR */
 .cartBar{
   position:fixed;
   bottom:0;
@@ -143,9 +94,7 @@ body{
   right:0;
   background:white;
   padding:10px;
-  box-shadow:0 -2px 10px rgba(0,0,0,0.1);
 }
-
 .send{
   background:linear-gradient(45deg,#007bff,#4da3ff);
   color:white;
@@ -153,33 +102,61 @@ body{
   padding:14px;
   border:none;
   border-radius:10px;
-  font-weight:bold;
+}
+
+/* SEPET PANEL */
+.cartPanel{
+  position:fixed;
+  right:-100%;
+  top:0;
+  width:80%;
+  height:100%;
+  background:white;
+  padding:20px;
+  transition:0.3s;
+  z-index:999;
+}
+.cartPanel.active{
+  right:0;
+}
+.cartHeader{
+  display:flex;
+  justify-content:space-between;
+  font-size:20px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="overlay">
     <div class="logo">🌸 RüzgarGülü</div>
     <div class="masa" id="masa"></div>
     <input id="search" class="search" placeholder="🔍 Ürün ara...">
   </div>
-  <button onclick="acSepet()" style="margin-top:10px;padding:8px;border:none;border-radius:10px;">
-🛒 Sepet
-</button>
-  
+
+  <button onclick="acSepet()" style="margin:10px">
+    🛒 Sepet
+  </button>
 </div>
 
-<!-- KATEGORİ -->
 <div class="kategoriBar" id="kategoriBar"></div>
-
-<!-- ÜRÜNLER -->
 <div id="menu"></div>
 
-<!-- SEPET -->
+<!-- ✅ TEK SEPET PANEL -->
+<div id="cartPanel" class="cartPanel">
+  <div class="cartHeader">
+    🛒 Sepet
+    <span onclick="kapatSepet()">✖</span>
+  </div>
+
+  <div id="cartItems"></div>
+  <h3 id="cartTotal">Toplam: 0₺</h3>
+
+  <button class="send" onclick="siparis()">Siparişi Gönder</button>
+</div>
+
 <div class="cartBar">
   <h3 id="total">Toplam: 0₺</h3>
   <button class="send" onclick="siparis()">Siparişi Gönder</button>
@@ -195,90 +172,78 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// MASA
 const masa = new URLSearchParams(location.search).get("table");
-
-if(!masa){
-  document.body.innerHTML = "<h2>QR ile giriş yap</h2>";
-  throw new Error("Masa yok");
-}
-
 document.getElementById("masa").innerText = "Masa: " + masa;
 
-// STATE
 let sepet = [];
-let tumUrunler = [];
+let kategoriler = [];
 let aktifKategori = null;
 
-// MENÜ YÜKLE
+// 🔥 MENÜ
 async function loadMenu(){
 
   const urunSnap = await getDocs(collection(db,"products"));
   const katSnap = await getDocs(collection(db,"categories"));
 
-  let kategoriler = {};
+  kategoriler = [];
 
   katSnap.forEach(d=>{
-    kategoriler[d.id] = {
-      id: d.id,
-      name: d.data().name,
-      items: []
-    };
+    kategoriler.push({
+      id:d.id,
+      name:d.data().name,
+      items:[]
+    });
   });
 
   urunSnap.forEach(d=>{
     const p = d.data();
 
-    if(p.categoryId && kategoriler[p.categoryId]){
-      const urun = {
+    const kat = kategoriler.find(x=>x.id===p.categoryId);
+    if(kat){
+      kat.items.push({
         id:d.id,
         ...p,
         price:Number(p.price)
-      };
-
-      kategoriler[p.categoryId].items.push(urun);
-      tumUrunler.push(urun);
+      });
     }
   });
 
-  kategoriUI(Object.values(kategoriler));
-  render(Object.values(kategoriler));
+  kategoriUI();
+  render();
 }
 
-// KATEGORİ BAR
-function kategoriUI(katlar){
+// 🔥 KATEGORİ
+function kategoriUI(){
   let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
 
-  katlar.forEach(k=>{
+  kategoriler.forEach(k=>{
     html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
   });
 
   document.getElementById("kategoriBar").innerHTML = html;
 }
 
-// FİLTRE
+// 🔥 FİLTRE
 window.filtre = (id)=>{
   aktifKategori = id;
-  loadMenu();
+  render();
 };
 
-// RENDER
-function render(katlar){
+// 🔥 RENDER
+function render(){
 
   let arama = document.getElementById("search").value.toLowerCase();
-
   let html = "";
 
-  katlar.forEach(k=>{
+  kategoriler.forEach(k=>{
 
     let items = k.items.filter(p=>{
       return (!aktifKategori || p.categoryId === aktifKategori)
       && p.name.toLowerCase().includes(arama);
     });
 
-    if(items.length === 0) return;
+    if(items.length===0) return;
 
-    html += `<div class="sectionTitle">${k.name}</div>`;
     html += `<div class="products">`;
 
     items.forEach(p=>{
@@ -287,27 +252,12 @@ function render(katlar){
         <img src="${p.image || 'https://via.placeholder.com/300'}">
         <div class="cardContent">
           <h3>${p.name}</h3>
-          <p>${p.description || ""}</p>
-
           <div class="bottom">
             <span class="price">${p.price}₺</span>
             <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
           </div>
-          <div id="cartPanel" class="cartPanel">
-  <div class="cartHeader">
-    🛒 Sepet
-    <span onclick="kapatSepet()">✖</span>
-  </div>
-
-  <div id="cartItems"></div>
-
-  <h3 id="cartTotal">Toplam: 0₺</h3>
-
-  <button class="send" onclick="siparis()">Siparişi Gönder</button>
-</div>
         </div>
-      </div>
-      `;
+      </div>`;
     });
 
     html += `</div>`;
@@ -316,10 +266,9 @@ function render(katlar){
   document.getElementById("menu").innerHTML = html;
 }
 
-// ARAMA
-document.getElementById("search").addEventListener("input", loadMenu);
+document.getElementById("search").addEventListener("input", render);
 
-// SEPET
+// 🛒 SEPET
 window.ekle = (id,name,price)=>{
   const item = sepet.find(x=>x.id===id);
   if(item) item.qty++;
@@ -328,7 +277,6 @@ window.ekle = (id,name,price)=>{
 };
 
 function guncelle(){
-
   let html="";
   let total=0;
 
@@ -342,7 +290,7 @@ function guncelle(){
   document.getElementById("cartTotal").innerText = "Toplam: " + total + "₺";
 }
 
-// SİPARİŞ
+// 📦 SİPARİŞ
 window.siparis = async ()=>{
   if(sepet.length===0) return alert("Sepet boş");
 
@@ -361,14 +309,15 @@ window.siparis = async ()=>{
   sepet=[];
   guncelle();
 };
+
+// 🎯 PANEL
 window.acSepet = ()=>{
   document.getElementById("cartPanel").classList.add("active");
 };
-
 window.kapatSepet = ()=>{
   document.getElementById("cartPanel").classList.remove("active");
 };
-  
+
 loadMenu();
 
 </script>
