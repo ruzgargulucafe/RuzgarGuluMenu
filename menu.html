@@ -289,6 +289,18 @@ function render(katlar){
             <span class="price">${p.price}₺</span>
             <button class="addBtn" onclick="ekle('${p.id}','${p.name}',${p.price})">+</button>
           </div>
+          <div id="cartPanel" class="cartPanel">
+  <div class="cartHeader">
+    🛒 Sepet
+    <span onclick="kapatSepet()">✖</span>
+  </div>
+
+  <div id="cartItems"></div>
+
+  <h3 id="cartTotal">Toplam: 0₺</h3>
+
+  <button class="send" onclick="siparis()">Siparişi Gönder</button>
+</div>
         </div>
       </div>
       `;
