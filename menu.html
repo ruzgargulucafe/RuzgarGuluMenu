@@ -158,7 +158,11 @@ urunSnap.forEach(d=>{
   const p = d.data();
 
   if(p.categoryId && kategoriler[p.categoryId]){
-    kategoriler[p.categoryId].items.push(p);
+    kategoriler[p.categoryId].items.push({
+      id: d.id,   // 🔥 EN ÖNEMLİ SATIR
+      ...p
+      price: Number(p.price)
+    });
   }
 });
 
@@ -175,7 +179,11 @@ Object.values(kategoriler).forEach(k=>{
     html += `
     <div class="card">
       <b>${p.name}</b><br>
-      ${p.price}₺
+      ${p.price}₺<br><br>
+
+      <button onclick="ekle('${p.id}','${p.name}',${p.price})">
+        ➕ Sepete Ekle
+      </button>
     </div>
     `;
   });
