@@ -1,181 +1,186 @@
 /* =========================
-GENEL ARKA PLAN
+GENEL
 ========================= */
 
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #fff;
+body{
+  margin:0;
+  font-family:'Segoe UI', sans-serif;
+  background:#f5f5f5;
 }
 
 /* =========================
-HEADER BUTONLAR
+HEADER (ÜST ALAN)
 ========================= */
 
-.topButtons {
-  display: flex;
-  gap: 10px;
-  padding: 15px;
+.header{
+  height:230px;
+  background:url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") center/cover;
+  position:relative;
 }
 
-.topButtons button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
+.overlay{
+  height:100%;
+  background:rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  color:white;
+  padding:20px;
 }
 
-.garsonBtn {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-  color: #fff;
+.logo{
+  font-size:26px;
+  font-weight:bold;
 }
 
-.hesapBtn {
-  background: #374151;
-  color: #fff;
+.masa{
+  margin-top:5px;
+  opacity:0.8;
 }
 
 /* =========================
-KART GENEL
+ARAMA
 ========================= */
 
-.card {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 15px;
-  margin: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+.search{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  border-radius:25px;
+  border:none;
+  outline:none;
+  font-size:14px;
 }
 
 /* =========================
-ÜRÜN KARTI
+KATEGORİ BAR
 ========================= */
 
-.productCard {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-bottom: 15px;
-  background: rgba(255,255,255,0.06);
-  padding: 10px;
-  border-radius: 12px;
+.kategoriBar{
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+  padding:10px;
 }
 
-/* FOTO */
-
-.productCard img {
-  width: 80px;
-  height: 80px;
-  border-radius: 10px;
-  object-fit: cover;
+.kategoriBtn{
+  padding:10px 15px;
+  border-radius:20px;
+  background:white;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:0.2s;
 }
 
-/* BİLGİ */
-
-.productInfo {
-  flex: 1;
-}
-
-.productInfo h3 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.productInfo p {
-  margin: 3px 0;
-  font-size: 13px;
-  opacity: 0.7;
-}
-
-/* FİYAT */
-
-.productPrice {
-  font-weight: bold;
-  font-size: 16px;
-  color: #22c55e;
-}
-
-/* BUTON */
-
-.addBtn {
-  background: #22c55e;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  border: none;
-  cursor: pointer;
+.kategoriBtn.active{
+  background:#ff5722;
+  color:white;
 }
 
 /* =========================
-KATEGORİ
+BAŞLIK
 ========================= */
 
-.categoryHeader {
-  background: rgba(255,255,255,0.1);
-  padding: 12px;
-  border-radius: 10px;
-  margin: 10px;
-  font-weight: bold;
-  cursor: pointer;
+.sectionTitle{
+  padding:10px;
+  font-size:18px;
+  font-weight:bold;
 }
 
 /* =========================
-SEPET
+ÜRÜN KARTLARI
 ========================= */
 
-.cartItem {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+.products{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:10px;
+}
+
+.card{
+  background:white;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  transition:0.2s;
+}
+
+.card:hover{
+  transform:scale(1.03);
+}
+
+.card img{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+}
+
+.cardContent{
+  padding:10px;
+}
+
+.cardContent h3{
+  margin:0;
+  font-size:16px;
+}
+
+.cardContent p{
+  font-size:12px;
+  color:#777;
+  margin:5px 0;
+}
+
+.bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.price{
+  color:#ff5722;
+  font-weight:bold;
+}
+
+.addBtn{
+  background:#ff5722;
+  border:none;
+  color:white;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  font-size:18px;
+  cursor:pointer;
 }
 
 /* =========================
-TOPLAM PANEL
+SEPET ALT BAR
 ========================= */
 
-.bottomBar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #111827;
-  padding: 15px;
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+.cartBar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:white;
+  padding:10px;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.1);
 }
 
-#cartTotal {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.orderBtn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  font-size: 16px;
+.send{
+  background:linear-gradient(45deg,#ff5722,#ff8a50);
+  color:white;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 /* =========================
-RESPONSIVE
+SEPET PANEL (SAĞDAN)
 ========================= */
 
-@media (max-width: 768px) {
-
-  .productCard {
-    flex-direction: row;
-  }
-
-  .productCard img {
-    width: 70px;
-    height: 70px;
-  }
 .cartPanel{
   position:fixed;
   right:-100%;
@@ -204,4 +209,13 @@ RESPONSIVE
   font-size:14px;
   margin-bottom:10px;
 }
+
+/* =========================
+RESPONSIVE
+========================= */
+
+@media (max-width:768px){
+  .products{
+    grid-template-columns:1fr;
+  }
 }
