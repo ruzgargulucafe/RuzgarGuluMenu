@@ -2,9 +2,7 @@ body{
   margin:0;
   font-family:'Poppins',sans-serif;
   background:#f3f3f3;
-}
-body{
-  padding-bottom:120px;
+  padding-bottom:120px; /* ALT BAR için boşluk */
 }
 /* HEADER */
 .header{
@@ -227,4 +225,37 @@ body{
 /* SCROLL GİZLE */
 .kategoriBar::-webkit-scrollbar{
   display:none;
+}
+/* 🔥 CARD HOVER (çok şık olur) */
+.card{
+  transition:0.25s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* 🟠 KATEGORİ AKTİF ANİMASYON */
+.kategoriBtn{
+  transition:0.2s;
+}
+.kategoriBtn:active{
+  transform:scale(0.95);
+}
+
+/* 🛒 SEPET PANEL ANİMASYON */
+.cartPanel{
+  box-shadow:-10px 0 30px rgba(0,0,0,0.2);
+}
+
+/* 🔵 BUTON DAHA GÜÇLÜ */
+.mainOrderBtn{
+  letter-spacing:0.5px;
+}
+
+/* 📱 iPhone safe area (çok önemli) */
+@supports (padding: max(0px)) {
+  .cartBar{
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+  }
 }
