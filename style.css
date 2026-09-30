@@ -146,51 +146,37 @@ body{
 }
 
 /* 🔥 ALT SEPET BAR */
+/* ALT BAR GÜÇLÜ TASARIM */
 .cartBar{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
-  background:#ffffff;
-  padding:12px;
-  box-shadow:0 -5px 20px rgba(0,0,0,0.15);
-  border-top-left-radius:20px;
-  border-top-right-radius:20px;
+  background:white;
+  padding:15px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
   z-index:999;
 }
 
-/* 🔥 ANA BUTON */
+/* BÜYÜK MAVİ BUTON */
 .mainOrderBtn{
-  display:block;
+  background:linear-gradient(45deg,#007bff,#4da3ff);
+  color:white;
   width:100%;
   padding:16px;
-  font-size:16px;
-  font-weight:700;
   border:none;
   border-radius:14px;
-  background: linear-gradient(45deg,#007bff,#4da3ff);
-  color:white;
+  font-weight:bold;
+  font-size:16px;
   margin-top:10px;
-  transition:0.3s;
+  box-shadow:0 6px 15px rgba(0,123,255,0.4);
+  transition:0.2s;
 }
 
-/* ❌ PASİF BUTON */
-.mainOrderBtn.disabled{
-  background:#ccc !important;
-  color:#666 !important;
+/* BASILINCA EFEKT */
+.mainOrderBtn:active{
+  transform:scale(0.97);
 }
-
-/* 🎯 BUTON ANİMASYON */
-.mainOrderBtn.activeAnim{
-  animation:bounce 0.3s ease;
-}
-
-@keyframes bounce{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.08);}
-  100%{transform:scale(1);}
-}
-
 /* SEPET PANEL */
 .cartPanel{
   position:fixed;
