@@ -56,7 +56,6 @@ body{
   border:none;
   padding:10px 14px;
   border-radius:12px;
-  font-weight:bold;
 }
 
 .kategoriBar{
@@ -103,7 +102,6 @@ body{
 .bottom{
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
 .price{
@@ -127,7 +125,6 @@ body{
   right:0;
   background:white;
   padding:15px;
-  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
 }
 
 .mainOrderBtn{
@@ -138,8 +135,6 @@ body{
   border:none;
   border-radius:14px;
   font-weight:bold;
-  font-size:16px;
-  margin-top:10px;
 }
 
 .cartPanel{
@@ -179,7 +174,7 @@ body{
 
   <div class="overlay">
     <div class="logo">RüzgarGülü Cafe</div>
-    <div class="masa" id="masa"></div>
+    <div id="masa"></div>
     <input id="search" class="search" placeholder="🔍 Ürün ara...">
   </div>
 </div>
@@ -199,13 +194,11 @@ body{
 
   <h3 id="cartTotal">Toplam: 0₺</h3>
 
-  <!-- 🔥 BUTONLAR -->
   <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
   <button class="extraBtn billBtn" onclick="hesap()">💳 Hesap İste</button>
 
 </div>
 
-<!-- ALT -->
 <div class="cartBar">
   <h3 id="total">Toplam: 0₺</h3>
   <button class="mainOrderBtn" onclick="siparis()">🚀 Siparişi Gönder</button>
@@ -219,7 +212,9 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  onSnapshot
+  onSnapshot,
+  updateDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const masa = new URLSearchParams(location.search).get("table");
@@ -227,7 +222,6 @@ document.getElementById("masa").innerText = "Masa: " + masa;
 
 let sepet = [];
 let kategoriler = [];
-let aktifKategori = null;
 
 // MENÜ
 async function loadMenu(){
@@ -248,37 +242,17 @@ async function loadMenu(){
     }
   });
 
-  kategoriUI();
   render();
 }
 
-// KATEGORİ
-function kategoriUI(){
-  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
-  kategoriler.forEach(k=>{
-    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
-  });
-  document.getElementById("kategoriBar").innerHTML = html;
-}
-
-window.filtre = (id)=>{ aktifKategori=id; render(); };
-
 // RENDER
 function render(){
-  let arama = document.getElementById("search").value.toLowerCase();
   let html = "";
 
   kategoriler.forEach(k=>{
-    let items = k.items.filter(p=>{
-      return (!aktifKategori || p.categoryId === aktifKategori)
-      && p.name.toLowerCase().includes(arama);
-    });
-
-    if(items.length===0) return;
-
     html += `<div class="products">`;
 
-    items.forEach(p=>{
+    k.items.forEach(p=>{
       html += `
       <div class="card">
         <img src="${p.image || 'https://via.placeholder.com/300'}">
@@ -298,55 +272,13 @@ function render(){
   document.getElementById("menu").innerHTML = html;
 }
 
-document.getElementById("search").addEventListener("input", render);
-
-
-
-// 🔥 BURASI SENİN ARADIĞIN (DOĞRU YER)
-function hesapDinle(){
-
-  onSnapshot(collection(db,"orders"), (snap)=>{
-
-    let map = {};
-    let total = 0;
-
-    snap.forEach(d=>{
-      const o = d.data();
-
-      if(!o) return;
-      if(o.table !== masa) return;
-      if(o.closed === true) return;
-
-      (o.items || []).forEach(i=>{
-        if(!map[i.name]) map[i.name] = { qty:0, total:0 };
-
-        map[i.name].qty += i.qty;
-        map[i.name].total += i.price * i.qty;
-
-        total += i.price * i.qty;
-      });
-
-    });
-
-    let html = "";
-
-    Object.keys(map).forEach(name=>{
-      html += `<div>${name} x${map[name].qty} - ${map[name].total}₺</div>`;
-    });
-
-    document.getElementById("cartItems").innerHTML =
-      html || "Henüz sipariş yok";
-
-    document.getElementById("cartTotal").innerText =
-      "Toplam: " + total + "₺";
-
-    document.getElementById("total").innerText =
-      "Toplam: " + total + "₺";
-
-  });
-
-}
-
+// SEPET EKLE
+window.ekle = (id,name,price)=>{
+  const item = sepet.find(x=>x.id===id);
+  if(item) item.qty++;
+  else sepet.push({id,name,price,qty:1});
+  alert(name + " eklendi");
+};
 
 // SİPARİŞ
 window.siparis = async ()=>{
@@ -365,6 +297,78 @@ window.siparis = async ()=>{
 
   alert("Sipariş gönderildi");
   sepet=[];
+};
+
+// 🔥 MASA HESABI CANLI
+function hesapDinle(){
+
+  onSnapshot(collection(db,"orders"), (snap)=>{
+
+    let map = {};
+    let total = 0;
+
+    snap.forEach(d=>{
+      const o = d.data();
+      if(!o || o.table !== masa || o.closed) return;
+
+      (o.items || []).forEach(i=>{
+        if(!map[i.name]) map[i.name] = { qty:0, total:0 };
+
+        map[i.name].qty += i.qty;
+        map[i.name].total += i.price * i.qty;
+
+        total += i.price * i.qty;
+      });
+    });
+
+    let html = "";
+
+    Object.keys(map).forEach(name=>{
+      html += `
+      <div style="display:flex;justify-content:space-between;">
+        <span>${name} x${map[name].qty}</span>
+        <div>
+          <button onclick="azalt('${name}')">➖</button>
+          <button onclick="arttir('${name}')">➕</button>
+        </div>
+      </div>`;
+    });
+
+    document.getElementById("cartItems").innerHTML = html || "Henüz sipariş yok";
+    document.getElementById("cartTotal").innerText = "Toplam: " + total + "₺";
+    document.getElementById("total").innerText = "Toplam: " + total + "₺";
+  });
+}
+
+// ➕ ➖ GÜNCELLE
+window.arttir = async (urun)=>{
+  const snap = await getDocs(collection(db,"orders"));
+  snap.forEach(async d=>{
+    const o = d.data();
+    if(o.table !== masa || o.closed) return;
+
+    let items = o.items.map(i=>{
+      if(i.name===urun) i.qty++;
+      return i;
+    });
+
+    await updateDoc(doc(db,"orders",d.id),{items});
+  });
+};
+
+window.azalt = async (urun)=>{
+  const snap = await getDocs(collection(db,"orders"));
+  snap.forEach(async d=>{
+    const o = d.data();
+    if(o.table !== masa || o.closed) return;
+
+    let items = o.items.map(i=>{
+      if(i.name===urun) i.qty--;
+      return i;
+    }).filter(i=>i.qty>0);
+
+    await updateDoc(doc(db,"orders",d.id),{items});
+  });
 };
 
 // GARSON
@@ -386,13 +390,8 @@ window.hesap = async ()=>{
 };
 
 // PANEL
-window.acSepet = ()=>{
-  document.getElementById("cartPanel").classList.add("active");
-};
-
-window.kapatSepet = ()=>{
-  document.getElementById("cartPanel").classList.remove("active");
-};
+window.acSepet = ()=> document.getElementById("cartPanel").classList.add("active");
+window.kapatSepet = ()=> document.getElementById("cartPanel").classList.remove("active");
 
 loadMenu();
 hesapDinle();
