@@ -3,7 +3,9 @@ body{
   font-family:'Poppins',sans-serif;
   background:#f3f3f3;
 }
-
+body{
+  padding-bottom:120px;
+}
 /* HEADER */
 .header{
   height:220px;
