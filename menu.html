@@ -246,13 +246,16 @@ async function loadMenu(){
 
   kategoriler = [];
 
-  katSnap.forEach(d=>{
-    kategoriler.push({
-      id:d.id,
-      name:d.data().name,
-      items:[]
-    });
+katSnap.forEach(d=>{
+  kategoriler.push({
+    id: d.id,
+    name: d.data().name,
+    order: Number(d.data().order ?? 9999),
+    items: []
   });
+});
+
+kategoriler.sort((a,b) => a.order - b.order);
 
   urunSnap.forEach(d=>{
   const p = d.data();
