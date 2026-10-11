@@ -94,7 +94,8 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
-  updateDoc
+  updateDoc,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -170,64 +171,117 @@ await deleteDoc(doc(db,"tables",id));
 masa();
 };
 
-// ================= KATEGORİ =================
+
+ // ================= KATEGORİ =================
 async function kategori(){
 
-document.getElementById("app").innerHTML=`
-<input id="k" placeholder="Kategori adı">
-<button onclick="ekleKat()">Ekle</button>
-<div id="list"></div>
-`;
+  document.getElementById("app").innerHTML = `
+    <input id="k" placeholder="Kategori adı">
+    <button onclick="ekleKat()">Ekle</button>
+    <div id="list"></div>
+  `;
 
-const snap = await getDocs(collection(db,"categories"));
+  const snap = await getDocs(collection(db,"categories"));
 
-let h="";
+  const liste = snap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+    order: Number(d.data().order ?? 9999)
+  }));
 
-snap.forEach(d=>{
-const data = d.data();
+  liste.sort((a,b) => a.order - b.order);
 
-h+=`
-<div class="card">
-${data.name}
-<button onclick="silKat('${d.id}')">Sil</button>
-</div>`;
-});
+  let h = "";
 
-document.getElementById("list").innerHTML=h;
-}
+  liste.forEach((k,index) => {
+    h += `
+      <div class="card">
+        <b>${k.name}</b>
+        <div style="margin-top:10px">
+          <button onclick="kategoriTasi('${k.id}',-1)"
+            ${index === 0 ? "disabled" : ""}>⬆️ Yukarı</button>
 
-// EKLE
-window.ekleKat = async ()=>{
+          <button onclick="kategoriTasi('${k.id}',1)"
+            ${index === liste.length-1 ? "disabled" : ""}>⬇️ Aşağı</button>
 
-const input = document.getElementById("k");
-const val = input.value.trim();
-
-if(val === ""){
-  alert("Kategori boş olamaz");
-  return;
-}
-
-try{
-
-  await addDoc(collection(db,"categories"),{
-    name: val
+          <button onclick="silKat('${k.id}')">Sil</button>
+        </div>
+      </div>
+    `;
   });
 
-  input.value = ""; // 🔥 input temizle
-  kategori();       // 🔥 listeyi yenile
-
-}catch(e){
-  console.error(e);
-  alert("Hata oluştu");
+  document.getElementById("list").innerHTML =
+    h || "Henüz kategori yok";
 }
 
+// KATEGORİ SIRASINI KAYDET
+window.kategoriTasi = async (id, yon) => {
+  try {
+    const snap = await getDocs(collection(db,"categories"));
+
+    const liste = snap.docs.map(d => ({
+      id: d.id,
+      order: Number(d.data().order ?? 9999)
+    }));
+
+    liste.sort((a,b) => a.order - b.order);
+
+    const index = liste.findIndex(k => k.id === id);
+    const hedef = index + yon;
+
+    if(index < 0 || hedef < 0 || hedef >= liste.length) return;
+
+    [liste[index], liste[hedef]] = [liste[hedef], liste[index]];
+
+    const batch = writeBatch(db);
+
+    liste.forEach((k,i) => {
+      batch.update(doc(db,"categories",k.id), {order: i + 1});
+    });
+
+    await batch.commit();
+    await kategori();
+
+  } catch(e) {
+    console.error(e);
+    alert("Kategori sıralaması kaydedilemedi: " + e.message);
+  }
 };
 
-// SİL
-window.silKat = async(id)=>{
-await deleteDoc(doc(db,"categories",id));
-kategori();
+// KATEGORİ EKLE
+window.ekleKat = async () => {
+  const input = document.getElementById("k");
+  const val = input.value.trim();
+
+  if(val === ""){
+    alert("Kategori boş olamaz");
+    return;
+  }
+
+  try {
+    const snap = await getDocs(collection(db,"categories"));
+    const maxOrder = snap.docs.reduce(
+      (max,d) => Math.max(max, Number(d.data().order ?? 0)), 0
+    );
+
+    await addDoc(collection(db,"categories"), {
+      name: val,
+      order: maxOrder + 1
+    });
+
+    kategori();
+  } catch(e) {
+    console.error(e);
+    alert("Kategori eklenemedi: " + e.message);
+  }
 };
+
+// KATEGORİ SİL
+window.silKat = async(id) => {
+  await deleteDoc(doc(db,"categories",id));
+  kategori();
+};
+
 
 // ================= ÜRÜN =================
 async function urun(){
@@ -286,8 +340,10 @@ h+=`
   <small>Kategori: ${kategoriMap[p.categoryId] || "-"}</small><br>
   ${p.price}₺<br>
 
-  <button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
-  <button onclick="silUrun('${d.id}')">Sil</button>
+<button onclick="urunTasi('${d.id}',-1,'${p.categoryId}')">⬆️ Yukarı</button>
+<button onclick="urunTasi('${d.id}',1,'${p.categoryId}')">⬇️ Aşağı</button>
+<button onclick="duzenleUrunAc('${d.id}')">Düzenle</button>
+<button onclick="silUrun('${d.id}')">Sil</button>
 </div>
 
 <div id="edit_${d.id}" style="display:none">
@@ -378,6 +434,44 @@ await addDoc(collection(db,"products"),{
 
 alert("Ürün eklendi ✅");
 urun();
+};
+
+ // ================= ÜRÜN SIRALAMA =================
+window.urunTasi = async (id, yon, categoryId) => {
+  try {
+    const snap = await getDocs(collection(db,"products"));
+
+    const liste = snap.docs
+      .filter(d => d.data().categoryId === categoryId)
+      .map(d => ({
+        id: d.id,
+        order: Number(d.data().order ?? 9999)
+      }));
+
+    liste.sort((a,b) => a.order - b.order);
+
+    const index = liste.findIndex(p => p.id === id);
+    const hedef = index + yon;
+
+    if(index < 0 || hedef < 0 || hedef >= liste.length) return;
+
+    [liste[index], liste[hedef]] = [liste[hedef], liste[index]];
+
+    const batch = writeBatch(db);
+
+    liste.forEach((p,i) => {
+      batch.update(doc(db,"products",p.id), {
+        order: i + 1
+      });
+    });
+
+    await batch.commit();
+    await urun();
+
+  } catch(e) {
+    console.error(e);
+    alert("Ürün sıralaması kaydedilemedi: " + e.message);
+  }
 };
 
 // ================= SİL =================
