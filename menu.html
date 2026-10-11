@@ -255,17 +255,25 @@ async function loadMenu(){
   });
 
   urunSnap.forEach(d=>{
-    const p = d.data();
-    const kat = kategoriler.find(x=>x.id===p.categoryId);
+  const p = d.data();
+  const kat = kategoriler.find(x=>x.id===p.categoryId);
 
-    if(kat){
-      kat.items.push({
-        id:d.id,
-        ...p,
-        price:Number(p.price)
-      });
-    }
+  if(kat){
+    kat.items.push({
+      id: d.id,
+      ...p,
+      price: Number(p.price),
+      order: Number(p.order ?? 9999)
+    });
+  }
+});
+
+// Her kategoride ürünleri belirlenen sıraya göre diz
+kategoriler.forEach(k=>{
+  k.items.sort((a,b)=>{
+    return a.order - b.order;
   });
+});
 
   kategoriUI();
   render();
