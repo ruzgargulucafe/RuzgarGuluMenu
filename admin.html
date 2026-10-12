@@ -51,6 +51,7 @@ body{margin:0;font-family:Arial;display:flex;background:#f4f6f9}
 <button onclick="page('kategori')">Kategoriler</button>
 <button onclick="page('urun')">Ürünler</button>
 <button onclick="pdfMenu()">📄 Menü PDF Oluştur</button>
+<button onclick="pdfMenuFotografli()">🖼️ Fotoğraflı Menü PDF</button>
 <button onclick="page('siparis')">Siparişler</button>
 <button onclick="page('garson')">Garson</button>
 <button onclick="page('ciro')">Ciro</button>
@@ -1038,6 +1039,202 @@ window.pdfMenu = async () => {
     console.error(e);
     pencere.close();
     alert("PDF menü hazırlanamadı: " + e.message);
+  }
+};
+
+window.pdfMenuFotografli = async () => {
+  const pencere = window.open("about:blank", "_blank");
+
+  if (!pencere) {
+    alert("Açılır pencereye izin vermen gerekiyor.");
+    return;
+  }
+
+  pencere.document.write("Fotoğraflı menü hazırlanıyor...");
+
+  try {
+    const [katSnap, urunSnap] = await Promise.all([
+      getDocs(collection(db, "categories")),
+      getDocs(collection(db, "products"))
+    ]);
+
+    const esc = (s) => String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+    const kategoriler = katSnap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      order: Number(d.data().order ?? 9999)
+    })).sort((a,b) => a.order - b.order);
+
+    const urunler = urunSnap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      order: Number(d.data().order ?? 9999),
+      price: Number(d.data().price || 0)
+    }));
+
+    let bolumler = "";
+
+    kategoriler.forEach(k => {
+      const liste = urunler
+        .filter(p => p.categoryId === k.id)
+        .sort((a,b) => a.order - b.order);
+
+      if (!liste.length) return;
+
+      bolumler += `
+        <section>
+          <h2>${esc(k.name)}</h2>
+          <div class="grid">
+            ${liste.map(p => `
+              <article class="urun">
+                ${p.image ? `
+                  <img src="${esc(p.image)}" alt="${esc(p.name)}">
+                ` : `
+                  <div class="resimYok">RüzgarGülü</div>
+                `}
+                <div class="bilgi">
+                  <strong>${esc(p.name)}</strong>
+                  ${p.description ? `<p>${esc(p.description)}</p>` : ""}
+                  <div class="fiyat">
+                    ${p.price.toLocaleString("tr-TR")} ₺
+                  </div>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    });
+
+    if (!bolumler) {
+      pencere.close();
+      alert("Menüde gösterilecek ürün bulunamadı.");
+      return;
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="tr">
+      <head>
+        <meta charset="UTF-8">
+        <title>RüzgarGülü Fotoğraflı Menü</title>
+        <style>
+          @page { size: A4; margin: 10mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: Arial, sans-serif;
+            color: #263548;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          header {
+            background: #16324f;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+          }
+          header h1 { color: #ffbf47; margin: 0 0 5px; }
+          header p { margin: 0; letter-spacing: 3px; font-size: 11px; }
+          section { margin-bottom: 20px; }
+          h2 {
+            background: #eaf1f7;
+            color: #16324f;
+            border-left: 5px solid #ff9800;
+            padding: 9px 12px;
+            font-size: 17px;
+            margin-bottom: 10px;
+          }
+          .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          .urun {
+            border: 1px solid #e2e6eb;
+            border-radius: 10px;
+            overflow: hidden;
+            break-inside: avoid;
+          }
+          .urun img, .resimYok {
+            display: block;
+            width: 100%;
+            height: 125px;
+            object-fit: cover;
+          }
+          .resimYok {
+            background: #eaf1f7;
+            color: #16324f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+          }
+          .bilgi { padding: 9px; }
+          .bilgi strong { font-size: 12px; }
+          .bilgi p {
+            font-size: 10px;
+            color: #68778a;
+            margin: 5px 0;
+          }
+          .fiyat {
+            color: #d97900;
+            font-weight: bold;
+            margin-top: 7px;
+            font-size: 13px;
+          }
+          footer {
+            text-align: center;
+            border-top: 2px solid #ff9800;
+            padding-top: 10px;
+            margin-top: 20px;
+            font-size: 10px;
+            color: #68778a;
+          }
+          @media screen {
+            body { max-width: 800px; margin: 20px auto; padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <header>
+          <h1>✿ RüzgarGülü ✿</h1>
+          <p>CAFE & RESTAURANT</p>
+        </header>
+        ${bolumler}
+        <footer>RüzgarGülü Cafe & Restaurant · Fotoğraflı Menü</footer>
+        <script>
+          const resimler = Array.from(document.images);
+          Promise.all(resimler.map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+              img.onload = resolve;
+              img.onerror = resolve;
+            });
+          })).then(() => {
+            setTimeout(() => window.print(), 400);
+          });
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    pencere.document.open();
+    pencere.document.write(html);
+    pencere.document.close();
+
+  } catch (e) {
+    console.error(e);
+    pencere.close();
+    alert("Fotoğraflı PDF hazırlanamadı: " + e.message);
   }
 };
 
