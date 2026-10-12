@@ -1,0 +1,480 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#16324f">
+<title>RüzgarGülü Cafe | Menü ve Rezervasyon</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --lacivert: #16324f;
+  --turuncu: #ff9800;
+  --krem: #fffaf0;
+  --metin: #293647;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Poppins', Arial, sans-serif;
+  color: var(--metin);
+  background: #f4f6f8;
+}
+header {
+  background: linear-gradient(135deg, #16324f, #285777);
+  color: white;
+  text-align: center;
+  padding: 32px 16px 26px;
+  border-bottom: 5px solid var(--turuncu);
+}
+.logo {
+  color: #ffca67;
+  font: 36px 'Pacifico', cursive;
+}
+.subtitle {
+  margin-top: 8px;
+  font-size: 12px;
+  letter-spacing: 4px;
+}
+.intro {
+  margin: 15px auto 0;
+  font-size: 13px;
+  opacity: .9;
+}
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 650px;
+  padding: 16px;
+  margin: auto;
+}
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 13px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-block;
+}
+.btn-primary { background: var(--turuncu); color: #fff; }
+.btn-dark { background: var(--lacivert); color: #fff; }
+.btn-whatsapp { background: #16864b; color: white; }
+.btn-light { background: white; color: var(--lacivert); border: 1px solid #d8e0e8; }
+.searchWrap { max-width: 650px; padding: 0 16px; margin: 0 auto 12px; }
+input, select, textarea {
+  width: 100%;
+  border: 1px solid #d8dee7;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  font-size: 14px;
+  background: white;
+}
+.categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 16px 16px;
+  max-width: 850px;
+  margin: auto;
+}
+.categoryBtn {
+  flex: 0 0 auto;
+  border: 1px solid #e2e6eb;
+  background: white;
+  color: var(--lacivert);
+  border-radius: 22px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.categoryBtn.active {
+  color: white;
+  background: var(--lacivert);
+  border-color: var(--lacivert);
+}
+#menu {
+  max-width: 850px;
+  padding: 0 16px 25px;
+  margin: auto;
+}
+.menuCategory { margin: 8px 0 22px; }
+.menuCategory h2 {
+  color: var(--lacivert);
+  background: #e7eef5;
+  border-left: 5px solid var(--turuncu);
+  border-radius: 5px;
+  padding: 11px 13px;
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+.product {
+  background: white;
+  border-bottom: 1px solid #edf0f3;
+  padding: 13px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.productName { font-size: 14px; font-weight: 500; }
+.productDescription { font-size: 11px; color: #788391; margin-top: 4px; }
+.productPrice {
+  color: #c97700;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status {
+  text-align: center;
+  padding: 22px;
+  color: #68778a;
+}
+.reservation {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  margin: 10px auto 30px;
+  max-width: 650px;
+  box-shadow: 0 8px 25px rgba(22,50,79,.08);
+}
+.reservation h2 { color: var(--lacivert); margin: 0 0 8px; }
+.reservation p { color: #6c7784; font-size: 13px; }
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.full { grid-column: 1 / -1; }
+.note { font-size: 11px; color: #77818e; line-height: 1.6; }
+footer {
+  background: var(--lacivert);
+  color: white;
+  text-align: center;
+  padding: 22px 14px;
+  font-size: 12px;
+}
+footer a { color: #ffca67; }
+@media(max-width:480px) {
+  .logo { font-size: 30px; }
+  .formGrid { grid-template-columns: 1fr; }
+  .full { grid-column: auto; }
+  .productName, .productPrice { font-size: 13px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">RüzgarGülü</div>
+  <div class="subtitle">CAFE & RESTAURANT</div>
+  <div class="intro">Menümüzü keşfedin, rezervasyonunuzu oluşturun.</div>
+</header>
+
+<div class="actions">
+  <a class="btn btn-whatsapp"
+     href="https://wa.me/905308440017"
+     target="_blank" rel="noopener">WhatsApp ile Ulaş</a>
+  <a class="btn btn-dark" href="tel:+905308440017">📞 Hemen Ara</a>
+  <button class="btn btn-primary" onclick="rezervasyonaGit()">📅 Rezervasyon Yap</button>
+  <button class="btn btn-light" onclick="menuyuYenile()">↻ Menüyü Yenile</button>
+</div>
+
+<div class="searchWrap">
+  <input id="search" type="search" placeholder="🔎 Menüde ürün ara...">
+</div>
+
+<nav id="categories" class="categories" aria-label="Menü kategorileri"></nav>
+<main id="menu"><div class="status">Menü yükleniyor...</div></main>
+
+<section id="reservation" class="reservation">
+  <h2>Rezervasyon Yap</h2>
+  <p>Bilgilerinizi doldurun. Talebiniz WhatsApp mesajı olarak hazırlanacak.</p>
+
+  <form id="reservationForm">
+    <div class="formGrid">
+      <div class="field">
+        <label for="firstName">Adınız *</label>
+        <input id="firstName" name="firstName" autocomplete="given-name" required maxlength="60" placeholder="Adınız">
+      </div>
+      <div class="field">
+        <label for="lastName">Soyadınız *</label>
+        <input id="lastName" name="lastName" autocomplete="family-name" required maxlength="60" placeholder="Soyadınız">
+      </div>
+
+      <div class="field full">
+        <label for="phone">Telefon numaranız *</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="05XX XXX XX XX">
+      </div>
+
+      <div class="field">
+        <label for="date">Rezervasyon tarihi *</label>
+        <input id="date" name="date" type="date" required>
+      </div>
+      <div class="field">
+        <label for="time">Saat *</label>
+        <select id="time" name="time" required></select>
+      </div>
+
+      <div class="field full">
+        <label for="guests">Kişi sayısı *</label>
+        <select id="guests" name="guests" required>
+          <option value="1">1 kişi</option>
+          <option value="2" selected>2 kişi</option>
+          <option value="3">3 kişi</option>
+          <option value="4">4 kişi</option>
+          <option value="5">5 kişi</option>
+          <option value="6">6 kişi</option>
+          <option value="7">7 kişi</option>
+          <option value="8">8 kişi</option>
+          <option value="9">9 kişi</option>
+          <option value="10">10 kişi</option>
+          <option value="10+">10 kişiden fazla</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label for="notes">Özel istekler / Not</label>
+        <textarea id="notes" name="notes" rows="3" maxlength="1000"
+          placeholder="Örneğin: deniz kenarı masa, doğum günü kutlaması..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-whatsapp" type="submit" style="width:100%">
+      WhatsApp ile Rezervasyon Talebi Gönder
+    </button>
+    <p class="note">
+      WhatsApp açıldığında mesajı göndermeniz gerekir. Talebiniz, işletme tarafından onaylanana kadar kesin rezervasyon sayılmaz.
+    </p>
+  </form>
+</section>
+
+<footer>
+  <strong>RüzgarGülü Cafe & Restaurant</strong><br>
+  Rezervasyon ve bilgi:
+  <a href="tel:+905308440017">0530 844 00 17</a><br>
+  <a href="https://wa.me/905308440017" target="_blank" rel="noopener">WhatsApp üzerinden bize ulaşın</a>
+</footer>
+
+<script type="module">
+import { db } from "./app.js";
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const WHATSAPP = "905308440017";
+
+let categories = [];
+let activeCategory = null;
+let allProducts = [];
+
+const $ = id => document.getElementById(id);
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function formatPrice(value) {
+  return Number(value || 0).toLocaleString("tr-TR", {
+    maximumFractionDigits: 2
+  }) + " ₺";
+}
+
+async function loadMenu() {
+  $("menu").innerHTML = '<div class="status">Menü yükleniyor...</div>';
+
+  try {
+    const [categorySnapshot, productSnapshot] = await Promise.all([
+      getDocs(collection(db, "categories")),
+      getDocs(collection(db, "products"))
+    ]);
+
+    categories = categorySnapshot.docs.map(d => ({
+      id: d.id,
+      name: d.data().name || "Kategori",
+      order: Number(d.data().order ?? 9999)
+    })).sort((a,b) => a.order - b.order);
+
+    allProducts = productSnapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      name: d.data().name || "",
+      price: Number(d.data().price || 0),
+      order: Number(d.data().order ?? 9999)
+    }));
+
+    renderCategories();
+    renderMenu();
+  } catch (error) {
+    console.error(error);
+    $("menu").innerHTML =
+      '<div class="status">Menü yüklenemedi. Lütfen daha sonra tekrar deneyin.</div>';
+  }
+}
+
+function renderCategories() {
+  let html = `
+    <button class="categoryBtn ${activeCategory === null ? "active" : ""}"
+      data-category="all">Tümü</button>`;
+
+  categories.forEach(category => {
+    html += `
+      <button class="categoryBtn ${activeCategory === category.id ? "active" : ""}"
+        data-category="${escapeHTML(category.id)}">
+        ${escapeHTML(category.name)}
+      </button>`;
+  });
+
+  $("categories").innerHTML = html;
+
+  $("categories").querySelectorAll("[data-category]").forEach(button => {
+    button.addEventListener("click", () => {
+      activeCategory = button.dataset.category === "all"
+        ? null
+        : button.dataset.category;
+      renderCategories();
+      renderMenu();
+    });
+  });
+}
+
+function renderMenu() {
+  const query = $("search").value.trim().toLocaleLowerCase("tr-TR");
+  let html = "";
+
+  categories.forEach(category => {
+    if (activeCategory && category.id !== activeCategory) return;
+
+    const products = allProducts
+      .filter(p => p.categoryId === category.id)
+      .filter(p => {
+        const searchable = `${p.name} ${p.description || ""}`
+          .toLocaleLowerCase("tr-TR");
+        return searchable.includes(query);
+      })
+      .sort((a,b) => a.order - b.order);
+
+    if (!products.length) return;
+
+    html += `
+      <section class="menuCategory">
+        <h2>${escapeHTML(category.name)}</h2>
+        ${products.map(p => `
+          <article class="product">
+            <div>
+              <div class="productName">${escapeHTML(p.name)}</div>
+              ${p.description ? `
+                <div class="productDescription">${escapeHTML(p.description)}</div>
+              ` : ""}
+            </div>
+            <div class="productPrice">${formatPrice(p.price)}</div>
+          </article>
+        `).join("")}
+      </section>`;
+  });
+
+  $("menu").innerHTML = html ||
+    '<div class="status">Aramanızla eşleşen ürün bulunamadı.</div>';
+}
+
+window.menuyuYenile = loadMenu;
+
+window.rezervasyonaGit = () => {
+  $("reservation").scrollIntoView({ behavior: "smooth" });
+  $("firstName").focus({ preventScroll: true });
+};
+
+$("search").addEventListener("input", renderMenu);
+
+// Tarih için bugünü yerel takvim formatında ayarla.
+const today = new Date();
+const localDate = [
+  today.getFullYear(),
+  String(today.getMonth() + 1).padStart(2, "0"),
+  String(today.getDate()).padStart(2, "0")
+].join("-");
+
+$("date").min = localDate;
+$("date").value = localDate;
+
+// Saat seçenekleri
+for (let hour = 12; hour <= 23; hour++) {
+  for (const minute of [0, 30]) {
+    if (hour === 23 && minute === 30) continue;
+    const value = `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    $("time").appendChild(option);
+  }
+}
+
+$("reservationForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const firstName = $("firstName").value.trim();
+  const lastName = $("lastName").value.trim();
+  const phone = $("phone").value.trim();
+  const date = $("date").value;
+  const time = $("time").value;
+  const guests = $("guests").value;
+  const notes = $("notes").value.trim();
+
+  if (!firstName || !lastName || !phone || !date || !time || !guests) {
+    alert("Lütfen zorunlu alanları doldurun.");
+    return;
+  }
+
+  if (date < localDate) {
+    alert("Geçmiş bir tarih için rezervasyon oluşturamazsınız.");
+    return;
+  }
+
+  const message = [
+    "Merhaba RüzgarGülü Cafe, rezervasyon talebim var.",
+    "",
+    `Ad Soyad: ${firstName} ${lastName}`,
+    `Telefon: ${phone}`,
+    `Tarih: ${date}`,
+    `Saat: ${time}`,
+    `Kişi sayısı: ${guests}`,
+    `Özel istekler: ${notes || "Belirtilmedi"}`,
+    "",
+    "Rezervasyon talebimin uygunluk durumunu bildirmenizi rica ederim."
+  ].join("\n");
+
+  const whatsappURL =
+    `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`;
+
+  window.open(whatsappURL, "_blank", "noopener,noreferrer");
+});
+
+loadMenu();
+</script>
+
+</body>
+</html>
