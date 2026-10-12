@@ -50,6 +50,7 @@ body{margin:0;font-family:Arial;display:flex;background:#f4f6f9}
 <button onclick="page('masa')">Masalar</button>
 <button onclick="page('kategori')">Kategoriler</button>
 <button onclick="page('urun')">Ürünler</button>
+<button onclick="pdfMenu()">📄 Menü PDF Oluştur</button>
 <button onclick="page('siparis')">Siparişler</button>
 <button onclick="page('garson')">Garson</button>
 <button onclick="page('ciro')">Ciro</button>
@@ -783,6 +784,263 @@ ${saatHTML}
 
 }
   
+ // ================= PDF MENÜ OLUŞTUR =================
+
+window.pdfMenu = async () => {
+
+  // Pencereyi kullanıcı tıklarken aç
+  const pencere = window.open("about:blank", "_blank");
+
+  if (!pencere) {
+    alert("PDF penceresi açılamadı. Tarayıcıda açılır pencerelere izin ver.");
+    return;
+  }
+
+  pencere.document.write(`
+    <html>
+      <head><title>RüzgarGülü Cafe Menü</title></head>
+      <body style="font-family:Arial;padding:30px">
+        Menü hazırlanıyor...
+      </body>
+    </html>
+  `);
+
+  try {
+
+    // Firebase'den güncel verileri al
+    const [katSnap, urunSnap] = await Promise.all([
+      getDocs(collection(db, "categories")),
+      getDocs(collection(db, "products"))
+    ]);
+
+    const kategoriler = katSnap.docs.map(d => ({
+      id: d.id,
+      name: d.data().name || "",
+      order: Number(d.data().order ?? 9999)
+    }));
+
+    const urunler = urunSnap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      name: d.data().name || "",
+      price: Number(d.data().price || 0),
+      order: Number(d.data().order ?? 9999)
+    }));
+
+    kategoriler.sort((a, b) => a.order - b.order);
+
+    // HTML içine yazılacak metinleri güvenli hâle getir
+    const guvenli = (metin) => String(metin ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+    let menuHTML = "";
+
+    kategoriler.forEach(k => {
+
+      const liste = urunler
+        .filter(p => p.categoryId === k.id)
+        .sort((a, b) => a.order - b.order);
+
+      if (liste.length === 0) return;
+
+      menuHTML += `
+        <section class="kategori">
+          <h2>${guvenli(k.name)}</h2>
+          <div class="urunler">
+            ${liste.map(p => `
+              <div class="urun">
+                <div class="urunAdi">
+                  ${guvenli(p.name)}
+                  ${p.description ? `
+                    <small>${guvenli(p.description)}</small>
+                  ` : ""}
+                </div>
+                <div class="nokta"></div>
+                <div class="fiyat">
+                  ${p.price.toLocaleString("tr-TR")} ₺
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    });
+
+    if (!menuHTML) {
+      pencere.close();
+      alert("PDF oluşturmak için kategoriler ve ürünler bulunamadı.");
+      return;
+    }
+
+    const tarih = new Date().toLocaleDateString("tr-TR");
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="tr">
+      <head>
+        <meta charset="UTF-8">
+        <title>RüzgarGülü Cafe Menü</title>
+
+        <style>
+          @page {
+            size: A4;
+            margin: 15mm;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          body {
+            margin: 0;
+            font-family: Arial, "DejaVu Sans", sans-serif;
+            color: #263548;
+            background: white;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .ust {
+            text-align: center;
+            padding: 24px 12px;
+            background: #16324f;
+            color: white;
+            border-radius: 14px;
+            margin-bottom: 24px;
+          }
+
+          .logo {
+            color: #ffbf47;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 1px;
+          }
+
+          .altBaslik {
+            margin-top: 8px;
+            font-size: 13px;
+            letter-spacing: 4px;
+          }
+
+          .cizgi {
+            width: 65px;
+            height: 4px;
+            background: #ff9800;
+            margin: 15px auto 0;
+            border-radius: 5px;
+          }
+
+          .kategori {
+            margin-bottom: 20px;
+            break-inside: avoid;
+          }
+
+          .kategori h2 {
+            background: #eaf1f7;
+            color: #16324f;
+            border-left: 5px solid #ff9800;
+            padding: 10px 12px;
+            font-size: 17px;
+            margin: 0 0 8px;
+            border-radius: 4px;
+          }
+
+          .urun {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 8px 4px;
+            border-bottom: 1px dotted #cbd3dc;
+            break-inside: avoid;
+          }
+
+          .urunAdi {
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          .urunAdi small {
+            display: block;
+            margin-top: 4px;
+            font-weight: normal;
+            color: #697586;
+            font-size: 10px;
+          }
+
+          .nokta {
+            flex: 1;
+            border-bottom: 1px dotted #cbd3dc;
+            min-width: 10px;
+          }
+
+          .fiyat {
+            white-space: nowrap;
+            color: #d97900;
+            font-size: 12px;
+            font-weight: bold;
+          }
+
+          .alt {
+            text-align: center;
+            color: #68778a;
+            font-size: 10px;
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 2px solid #ff9800;
+          }
+
+          .kategori, .urun {
+            page-break-inside: avoid;
+          }
+
+          @media screen {
+            body {
+              max-width: 800px;
+              margin: 20px auto;
+              padding: 20px;
+              box-shadow: 0 0 12px #ddd;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+        <header class="ust">
+          <div class="logo">✿ RüzgarGülü ✿</div>
+          <div class="altBaslik">CAFE & RESTAURANT</div>
+          <div class="cizgi"></div>
+        </header>
+
+        ${menuHTML}
+
+        <footer class="alt">
+          RüzgarGülü Cafe & Restaurant · Menü tarihi: ${tarih}
+        </footer>
+
+        <script>
+          window.onload = () => {
+            setTimeout(() => window.print(), 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    pencere.document.open();
+    pencere.document.write(html);
+    pencere.document.close();
+
+  } catch (e) {
+    console.error(e);
+    pencere.close();
+    alert("PDF menü hazırlanamadı: " + e.message);
+  }
+};
+
 // START
 page("masa");
 
