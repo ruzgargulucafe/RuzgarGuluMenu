@@ -1,3 +1,4 @@
+
 import { db } from "./app.js";
 
 import {
@@ -7,242 +8,318 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
-  serverTimestamp
+  serverTimestamp,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// =========================
+// YARDIMCI FONKSİYONLAR
+// =========================
+
+function urunAdi(i) {
+  return i.name || i.productName || i.title || i.product?.name || "Ürün";
+}
+
+function urunAdedi(i) {
+  return Number(i.qty ?? i.quantity ?? 1);
+}
+
+function urunListesi(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "<i>Sipariş ürünleri bulunamadı.</i><br>";
+  }
+
+  return items.map(i => {
+    const ad = urunAdi(i);
+    const adet = urunAdedi(i);
+    const fiyat = Number(i.price ?? i.product?.price ?? 0);
+
+    return `
+      <div style="padding:5px 0;border-bottom:1px solid #444">
+        <b>${ad}</b>
+        <span> × ${adet}</span>
+        ${fiyat > 0
+          ? `<br><small>Birim: ${fiyat}₺ · Ara toplam: ${fiyat * adet}₺</small>`
+          : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+function siparisDurumu(o) {
+  return String(o.status || "Bekliyor").trim().toLocaleLowerCase("tr-TR");
+}
+
+function guvenliMetin(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[ch]));
+}
 
 // =========================
 // SİPARİŞLER + MASALAR
 // =========================
 
-onSnapshot(collection(db,"orders"), snap=>{
+onSnapshot(collection(db, "orders"), snap => {
+  let yeniHTML = "";
+  let hazirHTML = "";
+  const masalar = {};
 
-  let yeniHTML="";
-  let hazirHTML="";
-  let masalar = {};
-
-  snap.forEach(d=>{
-
+  snap.forEach(d => {
     const o = d.data();
-    if(!o) return;
-    if(o.closed) return;
+    if (!o || o.closed) return;
 
-    if(!masalar[o.table]) masalar[o.table] = 0;
-    masalar[o.table] += o.total || 0;
+    const masa = o.table || "Masa belirtilmemiş";
+    const toplam = Number(o.total || 0);
 
-    let urunler="";
-    (o.items || []).forEach(i=>{
-      urunler += `${i.name} x${i.qty}<br>`;
-    });
+    if (!masalar[masa]) masalar[masa] = 0;
+    masalar[masa] += toplam;
 
-    if(o.status==="Bekliyor"){
+    const durum = siparisDurumu(o);
+    const urunler = urunListesi(o.items);
+    const masaGoster = guvenliMetin(masa);
+    const siparisToplami = `${toplam}₺`;
+
+    // Yeni siparişler
+    if (["bekliyor", "yeni", "yeni sipariş", "new"].includes(durum)) {
       yeniHTML += `
-      <div class="card">
-        <b>${o.table}</b><br>
-        ${urunler}
-        <b>${o.total}₺</b><br>
-        <button class="green" onclick="hazir('${d.id}')">✔ Hazır</button>
-      </div>`;
+        <div class="card">
+          <h3>🆕 ${masaGoster}</h3>
+          ${urunler}
+          <p><b>Sipariş toplamı: ${siparisToplami}</b></p>
+          <button class="green" onclick="hazir('${d.id}')">
+            🍳 Hazırlamaya Al / Hazır
+          </button>
+        </div>
+      `;
     }
 
-    if(o.status==="Hazır"){
+    // Hazırlanan / hazır siparişler
+    if (["hazırlanıyor", "hazirlaniyor", "hazır", "hazir", "preparing", "ready"].includes(durum)) {
       hazirHTML += `
-      <div class="card">
-        <b>${o.table}</b><br>
-        ${urunler}
-        <b>${o.total}₺</b><br>
-        <span style="color:lightgreen">✔ Hazır</span>
-      </div>`;
+        <div class="card">
+          <h3>🍳 ${masaGoster}</h3>
+          ${urunler}
+          <p><b>Sipariş toplamı: ${siparisToplami}</b></p>
+          <button class="orange" onclick="teslimEdildi('${d.id}')">
+            ✔ Teslim Edildi
+          </button>
+        </div>
+      `;
     }
 
+    // "Teslim Edildi" siparişler burada gösterilmez.
+    // Ancak kapatılmadığı sürece masa hesabına dahil edilir.
   });
 
-  document.getElementById("yeni").innerHTML = yeniHTML || "Sipariş yok";
-  document.getElementById("hazir").innerHTML = hazirHTML || "Yok";
+  document.getElementById("yeni").innerHTML =
+    yeniHTML || "Yeni sipariş yok";
 
-  let masaHTML="";
-  for(const m in masalar){
+  document.getElementById("hazir").innerHTML =
+    hazirHTML || "Hazırlanan sipariş yok";
+
+  let masaHTML = "";
+
+  for (const masa in masalar) {
     masaHTML += `
-    <div class="card">
-      <b>${m}</b><br>
-      Toplam: ${masalar[m]}₺
-    </div>`;
+      <div class="card">
+        <b>${guvenliMetin(masa)}</b><br>
+        Toplam: ${masalar[masa]}₺
+      </div>
+    `;
   }
 
-  document.getElementById("masalar").innerHTML = masaHTML || "Yok";
-
+  document.getElementById("masalar").innerHTML = masaHTML || "Açık masa yok";
+}, error => {
+  console.error("Siparişler okunamadı:", error);
+  document.getElementById("yeni").textContent = "Siparişler yüklenemedi.";
 });
-
 
 // =========================
 // HAZIR BUTONU
 // =========================
 
-window.hazir = async(id)=>{
-  await updateDoc(doc(db,"orders",id),{
-    status:"Hazır"
-  });
+window.hazir = async id => {
+  try {
+    await updateDoc(doc(db, "orders", id), {
+      status: "Hazır"
+    });
+  } catch (error) {
+    console.error(error);
+    alert("Sipariş güncellenemedi.");
+  }
 };
 
+// =========================
+// TESLİM EDİLDİ
+// =========================
+
+window.teslimEdildi = async id => {
+  if (!confirm("Bu sipariş müşteriye teslim edildi mi?")) return;
+
+  try {
+    await updateDoc(doc(db, "orders", id), {
+      status: "Teslim Edildi",
+      deliveredAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error(error);
+    alert("Sipariş teslim durumu kaydedilemedi.");
+  }
+};
 
 // =========================
-// GARSON
+// GARSON ÇAĞRILARI
 // =========================
 
-onSnapshot(collection(db,"calls"), snap=>{
+onSnapshot(collection(db, "calls"), snap => {
+  let html = "";
 
-  let html="";
-
-  snap.forEach(d=>{
+  snap.forEach(d => {
     const c = d.data();
-    const tarih = c.createdAt?.toDate()?.toLocaleString() || "";
+    const tarih = c.createdAt?.toDate?.().toLocaleString("tr-TR") || "";
 
     html += `
-    <div class="card">
-      Masa: ${c.table}<br>
-      <small>${tarih}</small><br>
-      <button class="red" onclick="silCall('${d.id}')">Temizle</button>
-    </div>`;
+      <div class="card">
+        Masa: ${guvenliMetin(c.table)}<br>
+        <small>${tarih}</small><br>
+        <button class="red" onclick="silCall('${d.id}')">Temizle</button>
+      </div>
+    `;
   });
 
   document.getElementById("calls").innerHTML = html || "Yok";
-
 });
 
-window.silCall = async(id)=>{
-  await deleteDoc(doc(db,"calls",id));
+window.silCall = async id => {
+  try {
+    await deleteDoc(doc(db, "calls", id));
+  } catch (error) {
+    console.error(error);
+    alert("Garson çağrısı silinemedi.");
+  }
 };
-
 
 // =========================
 // HESAP İSTEKLERİ
 // =========================
 
-onSnapshot(collection(db,"billRequests"), async snap=>{
+onSnapshot(collection(db, "billRequests"), async snap => {
+  try {
+    const ordersSnap = await getDocs(collection(db, "orders"));
+    let html = "";
 
-  let html="";
+    snap.forEach(d => {
+      const b = d.data();
+      const tarih = b.createdAt?.toDate?.().toLocaleString("tr-TR") || "";
 
-  const ordersSnap = await getDocs(collection(db,"orders"));
+      let toplam = 0;
+      let urunler = "";
 
-  snap.forEach(d=>{
+      ordersSnap.forEach(oDoc => {
+        const o = oDoc.data();
 
-    const b = d.data();
-    const tarih = b.createdAt?.toDate()?.toLocaleString() || "";
+        if (o.table === b.table && !o.closed) {
+          toplam += Number(o.total || 0);
+          urunler += urunListesi(o.items);
+        }
+      });
 
-    let toplam = 0;
-    let urunler = "";
+      html += `
+        <div class="card">
+          <b>Masa: ${guvenliMetin(b.table)}</b><br><br>
+          ${urunler || "Ürün bulunamadı."}
+          <p><b>Toplam: ${toplam}₺</b></p>
+          <small>${tarih}</small><br><br>
 
-    ordersSnap.forEach(oDoc=>{
-      const o = oDoc.data();
+          <button class="orange"
+            onclick="odemeAl('${guvenliMetin(b.table)}','${d.id}','Nakit')">
+            💵 Nakit
+          </button>
 
-      if(o.table === b.table && !o.closed){
-
-        toplam += o.total || 0;
-
-        (o.items || []).forEach(i=>{
-          urunler += `${i.name} x${i.qty}<br>`;
-        });
-
-      }
+          <button class="green"
+            onclick="odemeAl('${guvenliMetin(b.table)}','${d.id}','Kart')">
+            💳 Kart
+          </button>
+        </div>
+      `;
     });
 
-    html += `
-    <div class="card">
-      <b>Masa: ${b.table}</b><br><br>
-      ${urunler}
-      <b>Toplam: ${toplam}₺</b><br>
-      <small>${tarih}</small><br><br>
-
-      <button class="orange" onclick="odemeAl('${b.table}','${d.id}','Nakit')">
-        💵 Nakit
-      </button>
-
-      <button class="green" onclick="odemeAl('${b.table}','${d.id}','Kart')">
-        💳 Kart
-      </button>
-    </div>`;
-  });
-
-  document.getElementById("bills").innerHTML = html || "Yok";
-
+    document.getElementById("bills").innerHTML = html || "Yok";
+  } catch (error) {
+    console.error("Hesap istekleri okunamadı:", error);
+    document.getElementById("bills").textContent = "Hesap istekleri yüklenemedi.";
+  }
 });
-
 
 // =========================
 // ÖDEME AL
 // =========================
 
-window.odemeAl = async (masa, requestId, tip)=>{
+window.odemeAl = async (masa, requestId, tip) => {
+  if (!confirm(`${masa} için ${tip} ödemesini aldınız mı?`)) return;
 
-  const snap = await getDocs(collection(db,"orders"));
+  try {
+    const snap = await getDocs(collection(db, "orders"));
 
-  for(const d of snap.docs){
-    const o = d.data();
+    for (const d of snap.docs) {
+      const o = d.data();
 
-    if(o.table === masa && !o.closed){
-
-      await updateDoc(doc(db,"orders",d.id),{
-        closed: true,
-        paymentType: tip,
-        paidAt: serverTimestamp(),
-        dayClosed: false
-      });
-
+      if (String(o.table) === String(masa) && !o.closed) {
+        await updateDoc(doc(db, "orders", d.id), {
+          closed: true,
+          paymentType: tip,
+          paidAt: serverTimestamp(),
+          dayClosed: false
+        });
+      }
     }
+
+    await deleteDoc(doc(db, "billRequests", requestId));
+    alert("Ödeme kaydedildi.");
+  } catch (error) {
+    console.error(error);
+    alert("Ödeme kaydedilemedi. Firebase bağlantısını kontrol edin.");
   }
-
-  await deleteDoc(doc(db,"billRequests",requestId));
 };
-
 
 // =========================
 // GÜNLÜK KASA
 // =========================
 
-onSnapshot(collection(db,"orders"), snap=>{
-
+onSnapshot(collection(db, "orders"), snap => {
   let toplam = 0;
   let nakit = 0;
   let kart = 0;
 
   const today = new Date();
 
-  snap.forEach(d=>{
-
+  snap.forEach(d => {
     const o = d.data();
+    if (!o || !o.closed || !o.paymentType || !o.paidAt || o.dayClosed) return;
 
-    if(!o) return;
-    if(!o.closed) return;
-    if(!o.paymentType) return;
-    if(!o.paidAt) return;
-    if(o.dayClosed) return;
-    
     let tarih;
-
-    try{
+    try {
       tarih = o.paidAt.toDate();
-    }catch{
+    } catch {
       return;
     }
 
-    if(
+    if (
       tarih.getDate() === today.getDate() &&
       tarih.getMonth() === today.getMonth() &&
       tarih.getFullYear() === today.getFullYear()
-    ){
+    ) {
+      const tutar = Number(o.total || 0);
+      toplam += tutar;
 
-      toplam += o.total || 0;
-
-      if(o.paymentType === "Nakit"){
-        nakit += o.total || 0;
-      }
-
-      if(o.paymentType === "Kart"){
-        kart += o.total || 0;
-      }
-
+      if (o.paymentType === "Nakit") nakit += tutar;
+      if (o.paymentType === "Kart") kart += tutar;
     }
-
   });
 
   document.getElementById("kasa").innerHTML = `
@@ -252,73 +329,81 @@ onSnapshot(collection(db,"orders"), snap=>{
       💳 Kart: ${kart}₺
     </div>
   `;
-
+}, error => {
+  console.error("Kasa yüklenemedi:", error);
+  document.getElementById("kasa").textContent = "Kasa yüklenemedi.";
 });
 
-window.gunSonuKapat = async ()=>{
+// =========================
+// GÜN SONU KAPAT
+// =========================
 
-  if(!confirm("Gün sonu alınsın mı?")) return;
+window.gunSonuKapat = async () => {
+  if (!confirm("Gün sonu alınsın mı?")) return;
 
-  const now = new Date();
+  try {
+    const now = new Date();
+    const todayStr =
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  // 📌 bugünün tarihi
-  const todayStr = now.toISOString().split("T")[0];
+    const snap = await getDocs(collection(db, "orders"));
 
-  // 🔥 orders kapat
-  const snap = await getDocs(collection(db,"orders"));
+    for (const d of snap.docs) {
+      const o = d.data();
 
-  for(const d of snap.docs){
-    const o = d.data();
-
-    if(!o.closed){
-      await updateDoc(doc(db,"orders",d.id),{
-        closed: true,
-        paymentType: "Nakit",
-        paidAt: serverTimestamp(),
-        dayClosed: true
-      });
-    }else if(!o.dayClosed){
-      await updateDoc(doc(db,"orders",d.id),{
-        dayClosed: true
-      });
+      if (!o.closed) {
+        await updateDoc(doc(db, "orders", d.id), {
+          closed: true,
+          paymentType: "Nakit",
+          paidAt: serverTimestamp(),
+          dayClosed: true
+        });
+      } else if (!o.dayClosed) {
+        await updateDoc(doc(db, "orders", d.id), {
+          dayClosed: true
+        });
+      }
     }
-  }
 
-  // 🔥 gün sonu kaydı oluştur
-  await addDoc(collection(db,"dayLogs"),{
-    date: todayStr,
-    closedAt: serverTimestamp()
-  });
-
-  alert("Gün sonu alındı ✅");
-};
-
-import { addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-async function gunAcilisKontrol(){
-
-  const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
-
-  const snap = await getDocs(collection(db,"dayLogs"));
-
-  let bugunVar = false;
-
-  snap.forEach(d=>{
-    const data = d.data();
-    if(data.date === todayStr){
-      bugunVar = true;
-    }
-  });
-
-  // 📌 eğer bugün kayıt yoksa → açılış yap
-  if(!bugunVar){
-    await addDoc(collection(db,"dayLogs"),{
+    await addDoc(collection(db, "dayLogs"), {
       date: todayStr,
-      openedAt: serverTimestamp()
+      closedAt: serverTimestamp()
     });
 
-    console.log("Gün açılışı yapıldı");
+    alert("Gün sonu alındı ✅");
+  } catch (error) {
+    console.error(error);
+    alert("Gün sonu kaydedilemedi.");
+  }
+};
+
+// =========================
+// GÜN AÇILIŞ KONTROLÜ
+// =========================
+
+async function gunAcilisKontrol() {
+  try {
+    const now = new Date();
+    const todayStr =
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const snap = await getDocs(collection(db, "dayLogs"));
+    let bugunVar = false;
+
+    snap.forEach(d => {
+      if (d.data().date === todayStr) bugunVar = true;
+    });
+
+    if (!bugunVar) {
+      await addDoc(collection(db, "dayLogs"), {
+        date: todayStr,
+        openedAt: serverTimestamp()
+      });
+
+      console.log("Gün açılışı yapıldı");
+    }
+  } catch (error) {
+    console.error("Gün açılışı kontrol edilemedi:", error);
   }
 }
 
