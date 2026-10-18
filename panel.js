@@ -334,12 +334,13 @@ onSnapshot(collection(db, "orders"), snap => {
   document.getElementById("kasa").textContent = "Kasa yüklenemedi.";
 });
 
-// =========================
-// GÜN SONU KAPAT
-// =========================
+
+ // =========================
+ // GÜN SONU KAPAT
+ // =========================
 
 window.gunSonuKapat = async () => {
-  if (!confirm("Gün sonu alınsın mı?")) return;
+  if (!confirm("Gün sonu alınsın mı? Yalnızca ödemesi alınmış siparişler kaydedilecek; açık masalar korunacak.")) return;
 
   try {
     const now = new Date();
@@ -348,34 +349,66 @@ window.gunSonuKapat = async () => {
 
     const snap = await getDocs(collection(db, "orders"));
 
+    let toplam = 0;
+    let nakit = 0;
+    let kart = 0;
+    let sayi = 0;
+
     for (const d of snap.docs) {
       const o = d.data();
 
-      if (!o.closed) {
-        await updateDoc(doc(db, "orders", d.id), {
-          closed: true,
-          paymentType: "Nakit",
-          paidAt: serverTimestamp(),
-          dayClosed: true
-        });
-      } else if (!o.dayClosed) {
+      // Yalnızca gerçekten ödenmiş, henüz gün sonuna alınmamış siparişler
+      if (
+        o.closed === true &&
+        o.paymentType &&
+        o.paidAt &&
+        o.dayClosed !== true
+      ) {
+        const tutar = Number(o.total || 0);
+
+        toplam += tutar;
+        sayi++;
+
+        if (o.paymentType === "Nakit") nakit += tutar;
+        if (o.paymentType === "Kart") kart += tutar;
+      }
+    }
+
+    // Günlük raporu kaydet. Siparişleri değiştirme ve açık masaları kapatma.
+    await addDoc(collection(db, "dayLogs"), {
+      date: todayStr,
+      closedAt: serverTimestamp(),
+      total: toplam,
+      cash: nakit,
+      card: kart,
+      orderCount: sayi
+    });
+
+    // Rapor kaydı başarılı olduktan sonra ödenmiş siparişleri işaretle.
+    for (const d of snap.docs) {
+      const o = d.data();
+
+      if (
+        o.closed === true &&
+        o.paymentType &&
+        o.paidAt &&
+        o.dayClosed !== true
+      ) {
         await updateDoc(doc(db, "orders", d.id), {
           dayClosed: true
         });
       }
     }
 
-    await addDoc(collection(db, "dayLogs"), {
-      date: todayStr,
-      closedAt: serverTimestamp()
-    });
-
-    alert("Gün sonu alındı ✅");
+    alert(
+      `Gün sonu kaydedildi!\nToplam: ${toplam} TL\nNakit: ${nakit} TL\nKart: ${kart} TL\nÖdenmiş sipariş sayısı: ${sayi}`
+    );
   } catch (error) {
-    console.error(error);
-    alert("Gün sonu kaydedilemedi.");
+    console.error("Gün sonu hatası:", error);
+    alert("Gün sonu kaydedilemedi: " + (error.code || "") + " - " + (error.message || error));
   }
 };
+
 
 // =========================
 // GÜN AÇILIŞ KONTROLÜ
