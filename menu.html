@@ -1,334 +1,271 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>QR Menü</title>
-
+<title>QR Menü | RüzgarGülü Cafe</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Pacifico&display=swap" rel="stylesheet">
-
 <style>
-body{
-  margin:0;
-  font-family:'Poppins',sans-serif;
-  background:#f3f3f3;
-  padding-bottom:120px;
-}
-
-.header{
-  height:220px;
-  background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover no-repeat;
-  position:relative;
-}
-
-.overlay{
-  background: rgba(0,0,0,0.45);
-  height:100%;
-  padding:20px;
-  color:white;
-}
-
-.logo{
-  font-family:'Pacifico',cursive;
-  font-size:30px;
-}
-
-.masa{
-  opacity:0.8;
-}
-
-.search{
-  margin-top:15px;
-  width:100%;
-  padding:12px;
-  border-radius:25px;
-  border:none;
-}
-
-.cartTop{
-  position:absolute;
-  top:15px;
-  right:15px;
-  background:#ff9800;
-  color:white;
-  border:none;
-  padding:10px 14px;
-  border-radius:12px;
-}
-
-.kategoriBar{
-  display:flex;
-  overflow-x:auto;
-  gap:10px;
-  padding:15px;
-}
-
-.kategoriBtn{
-  padding:10px 15px;
-  border-radius:20px;
-  background:white;
-}
-
-.kategoriBtn.active{
-  background:#ff9800;
-  color:white;
-}
-
-.products{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:10px;
-}
-
-.card{
-  background:white;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.card img{
-  width:100%;
-  height:130px;
-  object-fit:cover;
-}
-
-.cardContent{
-  padding:10px;
-}
-
-.bottom{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.price{
-  color:#ff9800;
-  font-weight:bold;
-}
-
-/* + - */
-.qtyBox{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-
-.qtyBtn{
-  width:28px;
-  height:28px;
-  border:none;
-  background:#ff9800;
-  color:white;
-  border-radius:6px;
-}
-
-.cartBar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:white;
-  padding:15px;
-  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
-}
-
-.mainOrderBtn{
-  background:linear-gradient(45deg,#007bff,#004aad);
-  color:white;
-  width:100%;
-  padding:16px;
-  border:none;
-  border-radius:14px;
-  font-weight:bold;
-}
-
-/* SEPET PANEL */
-.cartPanel{
-  position:fixed;
-  right:-100%;
-  top:0;
-  width:85%;
-  height:100%;
-  background:white;
-  padding:20px;
-  transition:0.3s;
-  z-index:999;
-}
-
-.cartPanel.active{
-  right:0;
-}
-
-.cartHeader{
-  display:flex;
-  justify-content:space-between;
-  font-size:20px;
-}
-
-/* ekstra */
-.extraBtn{
-  width:100%;
-  margin-top:10px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.callBtn{background:#ff9800;color:white;}
-.billBtn{background:#333;color:white;}
-
+*{box-sizing:border-box}
+body{margin:0;font-family:'Poppins',sans-serif;background:#f3f3f3;padding-bottom:120px}
+.header{height:220px;background:url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover no-repeat;position:relative}
+.overlay{background:rgba(0,0,0,.45);height:100%;padding:20px;color:white}
+.logo{font-family:'Pacifico',cursive;font-size:30px}
+.masa{opacity:.9;margin-top:4px}
+.search{margin-top:15px;width:100%;padding:12px;border-radius:25px;border:none}
+.cartTop{position:absolute;top:15px;right:15px;background:#ff9800;color:white;border:none;padding:10px 14px;border-radius:12px}
+.kategoriBar{display:flex;overflow-x:auto;gap:10px;padding:15px}
+.kategoriBtn{padding:10px 15px;border-radius:20px;background:white;white-space:nowrap;cursor:pointer}
+.kategoriBtn.active{background:#ff9800;color:white}
+.products{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px}
+.card{background:white;border-radius:14px;overflow:hidden}
+.card img{width:100%;height:130px;object-fit:cover}
+.cardContent{padding:10px}
+.cardContent h3{font-size:16px;margin:0 0 10px}
+.bottom{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.price{color:#ff9800;font-weight:bold}
+.qtyBox{display:flex;align-items:center;gap:6px}
+.qtyBtn{width:28px;height:28px;border:none;background:#ff9800;color:white;border-radius:6px}
+.cartBar{position:fixed;bottom:0;left:0;right:0;background:white;padding:15px;box-shadow:0 -4px 20px #0002;z-index:10}
+.mainOrderBtn{background:linear-gradient(45deg,#007bff,#004aad);color:white;width:100%;padding:16px;border:none;border-radius:14px;font-weight:bold}
+.cartPanel{position:fixed;right:-110%;top:0;width:min(90%,430px);height:100%;overflow:auto;background:white;padding:20px;transition:.3s;z-index:1000;box-shadow:-5px 0 25px #0002}
+.cartPanel.active{right:0}
+.cartHeader{display:flex;justify-content:space-between;font-size:20px;font-weight:bold}
+.closeBtn{border:0;background:transparent;font-size:22px}
+.extraBtn{width:100%;margin-top:10px;padding:12px;border:none;border-radius:10px;font-weight:bold}
+.callBtn{background:#ff9800;color:white}
+.billBtn{background:#333;color:white}
+.accountBox{margin:14px 0;padding:12px;border-radius:12px;background:#f5f6f8}
+.accountRow{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:14px}
+.accountRow:last-child{border-bottom:0}
+.muted{font-size:12px;color:#687080}
+.payControls{display:grid;gap:8px;margin-top:10px}
+.payControls select,.payControls input{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:9px;background:white}
+.payBtn{width:100%;padding:12px;background:#1976d2;color:white;border:0;border-radius:10px;font-weight:bold}
+#nameGate{position:fixed;inset:0;background:#f3f3f3;z-index:5000;display:flex;align-items:center;justify-content:center;padding:22px}
+.gateCard{background:white;width:min(100%,390px);padding:25px;border-radius:20px;box-shadow:0 8px 30px #0001;text-align:center}
+.gateCard input{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;font:inherit;margin:10px 0}
+.gateCard button{width:100%;padding:13px;background:#1976d2;color:white;border:0;border-radius:10px;font-weight:bold}
+#pageError{margin:12px;padding:12px;background:#fff0e0;color:#7a3e00;border-radius:10px}
+@media(max-width:360px){.products{gap:8px;padding:7px}.cardContent{padding:8px}.cardContent h3{font-size:14px}.price{font-size:13px}.qtyBox{gap:4px}}
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <button class="cartTop" onclick="acSepet()">🛒</button>
+<div id="nameGate">
+  <div class="gateCard">
+    <div style="font-size:38px">🌊</div>
+    <div class="logo" style="color:#222">RüzgarGülü Cafe</div>
+    <h3 id="gateTitle">Menüye hoş geldiniz</h3>
+    <p id="gateDescription">Devam etmek için adınızı yazın.</p>
+    <form id="nameForm">
+      <input id="customerName" maxlength="40" placeholder="Adınız (ör. Ahmet)" required autocomplete="name">
+      <button type="submit">Menüyü Aç</button>
+      <p id="gateError" class="muted"></p>
+    </form>
+  </div>
+</div>
 
+<div class="header">
+  <button class="cartTop" onclick="acSepet()">🛒 Hesabım</button>
   <div class="overlay">
     <div class="logo">RüzgarGülü Cafe</div>
-    <div id="masa"></div>
+    <div id="masa" class="masa"></div>
     <input id="search" class="search" placeholder="🔍 Ürün ara...">
   </div>
 </div>
 
+<div id="pageError" hidden></div>
 <div class="kategoriBar" id="kategoriBar"></div>
 <div id="menu"></div>
 
-<!-- SEPET PANEL -->
 <div id="cartPanel" class="cartPanel">
+  <div class="cartHeader">🧾 Masa hesabı <button class="closeBtn" onclick="kapatSepet()">✖</button></div>
+  <div id="customerLine" class="muted"></div>
 
-  <div class="cartHeader">
-    🧾 Hesabım
-    <span onclick="kapatSepet()">✖</span>
+  <div class="accountBox">
+    <h3 style="margin-top:0">Masadaki tüm siparişler</h3>
+    <div id="cartItems">Hesap yükleniyor…</div>
+    <div class="accountRow"><strong>Masa toplamı</strong><strong id="cartTotal">0 ₺</strong></div>
+    <div class="accountRow"><span>Onaylı ödemeler</span><strong id="paidTotal">0 ₺</strong></div>
+    <div class="accountRow"><strong>Kalan borç</strong><strong id="remainingTotal">0 ₺</strong></div>
   </div>
 
-  <div id="cartItems">Henüz sipariş yok</div>
-  <h3 id="cartTotal">Toplam: 0₺</h3>
+  <div class="accountBox">
+    <h3 style="margin-top:0">💳 Ödeme talebi</h3>
+    <p class="muted">Kendi siparişleriniz için ödeme yapabilir veya ortak hesaba katkı tutarı girebilirsiniz. Ödeme talebi, işletme tarafından onaylanmalıdır.</p>
+    <div class="payControls">
+      <select id="payScope">
+        <option value="own">Kendi siparişlerim için ödeme</option>
+        <option value="shared">Ortak hesaba katkı</option>
+      </select>
+      <input id="payAmount" type="number" min="0.01" step="0.01" placeholder="Tutar (₺)">
+      <select id="payMethod">
+        <option value="POS">POS / kart (işletmede)</option>
+        <option value="Nakit">Nakit</option>
+        <option value="Online">Online ödeme talebi</option>
+      </select>
+      <button id="payRequestBtn" class="payBtn" onclick="odemeTalebi()">Ödeme talebi oluştur</button>
+      <div id="payMessage" class="muted" aria-live="polite"></div>
+    </div>
+  </div>
 
   <button class="extraBtn callBtn" onclick="garson()">🛎 Garson Çağır</button>
   <button class="extraBtn billBtn" onclick="hesap()">💳 Hesap İste</button>
-
 </div>
 
 <div class="cartBar">
-  <h3 id="total">Toplam: 0₺</h3>
+  <h3 id="total">Seçilen ürünler: 0 ₺</h3>
   <button class="mainOrderBtn" onclick="siparis()">🚀 Siparişi Gönder</button>
 </div>
+</body>
+</html>
 
 <script type="module">
-
-import { db } from "./app.js";
+import { db, auth } from "./app.js";
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  collection,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-  onSnapshot
+  collection, getDocs, addDoc, serverTimestamp, onSnapshot,
+  query, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const masa = new URLSearchParams(location.search).get("table");
-document.getElementById("masa").innerText = "Masa: " + masa;
+const params = new URLSearchParams(location.search);
+const masa = (params.get("table") || params.get("masa") || "").trim();
+const qrToken = (params.get("kod") || "").trim();
+const sessionKey = `rg-customer-${masa}`;
 
+let personName = "";
+let personId = "";
 let kategoriler = [];
 let aktifKategori = null;
-let secim = {}; // sadece geçici seçim
+let secim = {};
+let allOrders = [];
+let confirmedPayments = [];
 
-// MENÜ
-async function loadMenu(){
+const money = n => new Intl.NumberFormat("tr-TR", {
+  style: "currency", currency: "TRY", maximumFractionDigits: 2
+}).format(Number(n || 0));
 
-  const urunSnap = await getDocs(collection(db,"products"));
-  const katSnap = await getDocs(collection(db,"categories"));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+}[c]));
 
-  kategoriler = [];
+document.getElementById("masa").innerText = masa
+  ? `Masa: ${masa}` : "Masa bilgisi bulunamadı";
 
-katSnap.forEach(d=>{
-  kategoriler.push({
-    id: d.id,
-    name: d.data().name,
-    order: Number(d.data().order ?? 9999),
-    items: []
-  });
-});
+document.getElementById("gateTitle").innerText = masa
+  ? `Masa ${masa} · Hoş geldiniz` : "Masa bilgisi eksik";
 
-kategoriler.sort((a,b) => a.order - b.order);
+if (!masa) {
+  document.getElementById("gateError").textContent =
+    "QR bağlantısında ?table=2 gibi bir masa numarası bulunmalı.";
+  document.querySelector("#nameForm button").disabled = true;
+}
 
-  urunSnap.forEach(d=>{
-  const p = d.data();
-  const kat = kategoriler.find(x=>x.id===p.categoryId);
+document.getElementById("nameForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = document.getElementById("customerName").value.trim();
+  if (!name || !masa) return;
 
-  if(kat){
-    kat.items.push({
-      id: d.id,
-      ...p,
-      price: Number(p.price),
-      order: Number(p.order ?? 9999)
-    });
+  try {
+    await signInAnonymously(auth);
+    personName = name;
+    personId = auth.currentUser.uid;
+    sessionStorage.setItem(sessionKey, name);
+
+    document.getElementById("nameGate").style.display = "none";
+    document.getElementById("customerLine").textContent =
+      `${personName} · Masa ${masa}`;
+
+    await loadMenu();
+    hesapDinle();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("gateError").textContent =
+      "Bağlantı kurulamadı. Firebase Authentication bölümünde Anonim giriş açık mı kontrol edin.";
   }
 });
 
-// Her kategoride ürünleri belirlenen sıraya göre diz
-kategoriler.forEach(k=>{
-  k.items.sort((a,b)=>{
-    return a.order - b.order;
-  });
-});
+const savedName = sessionStorage.getItem(sessionKey);
+if (savedName) document.getElementById("customerName").value = savedName;
 
+async function loadMenu() {
+  const urunSnap = await getDocs(collection(db, "products"));
+  const katSnap = await getDocs(collection(db, "categories"));
+
+  kategoriler = [];
+  katSnap.forEach(d => {
+    kategoriler.push({
+      id: d.id,
+      name: d.data().name || "Kategori",
+      order: Number(d.data().order ?? 9999),
+      items: []
+    });
+  });
+
+  kategoriler.sort((a,b) => a.order - b.order);
+
+  urunSnap.forEach(d => {
+    const p = d.data();
+    const kat = kategoriler.find(x => x.id === p.categoryId);
+
+    if (kat && p.active !== false) {
+      kat.items.push({
+        id: d.id, ...p,
+        price: Number(p.price || 0),
+        order: Number(p.order ?? 9999)
+      });
+    }
+  });
+
+  kategoriler.forEach(k => k.items.sort((a,b) => a.order - b.order));
   kategoriUI();
   render();
 }
 
-// kategori
-function kategoriUI(){
-  let html = `<div class="kategoriBtn active" onclick="filtre(null)">Tümü</div>`;
-  kategoriler.forEach(k=>{
-    html += `<div class="kategoriBtn" onclick="filtre('${k.id}')">${k.name}</div>`;
+function kategoriUI() {
+  let html = `<div class="kategoriBtn ${aktifKategori === null ? "active" : ""}" onclick="filtre(null)">Tümü</div>`;
+
+  kategoriler.forEach(k => {
+    html += `<div class="kategoriBtn ${aktifKategori === k.id ? "active" : ""}" onclick="filtre('${esc(k.id)}')">${esc(k.name)}</div>`;
   });
+
   document.getElementById("kategoriBar").innerHTML = html;
 }
 
-window.filtre = (id)=>{
+window.filtre = id => {
   aktifKategori = id;
+  kategoriUI();
   render();
 };
 
-// ürünler
-function render(){
-
-  let arama = document.getElementById("search").value.toLowerCase();
+function render() {
+  const arama = document.getElementById("search").value.toLowerCase().trim();
   let html = "";
 
-  kategoriler.forEach(k=>{
+  kategoriler.forEach(k => {
+    const items = k.items.filter(p =>
+      (!aktifKategori || p.categoryId === aktifKategori) &&
+      String(p.name || "").toLowerCase().includes(arama)
+    );
 
-    let items = k.items.filter(p=>{
-      return (!aktifKategori || p.categoryId === aktifKategori)
-      && p.name.toLowerCase().includes(arama);
-    });
-
-    if(items.length===0) return;
+    if (!items.length) return;
 
     html += `<div class="products">`;
 
-    items.forEach(p=>{
-      html += `
-      <div class="card">
-        <img src="${p.image || 'https://via.placeholder.com/300'}">
+    items.forEach(p => {
+      html += `<div class="card">
+        <img loading="lazy" src="${esc(p.image || "https://via.placeholder.com/300")}" alt="${esc(p.name)}">
         <div class="cardContent">
-          <h3>${p.name}</h3>
-
+          <h3>${esc(p.name)}</h3>
           <div class="bottom">
-            <span class="price">${p.price}₺</span>
-
+            <span class="price">${money(p.price)}</span>
             <div class="qtyBox">
-              <button class="qtyBtn" onclick="azalt('${p.id}')">-</button>
-              <span id="qty_${p.id}">${secim[p.id] || 0}</span>
-              <button class="qtyBtn" onclick="arttir('${p.id}')">+</button>
+              <button class="qtyBtn" onclick="azalt('${esc(p.id)}')">-</button>
+              <span>${secim[p.id] || 0}</span>
+              <button class="qtyBtn" onclick="arttir('${esc(p.id)}')">+</button>
             </div>
-
           </div>
         </div>
       </div>`;
@@ -337,121 +274,225 @@ function render(){
     html += `</div>`;
   });
 
-  document.getElementById("menu").innerHTML = html;
+  document.getElementById("menu").innerHTML =
+    html || "<p style='padding:16px'>Ürün bulunamadı.</p>";
+
+  const selected = Object.entries(secim).reduce((sum, [id, qty]) => {
+    const p = kategoriler.flatMap(k => k.items).find(x => x.id === id);
+    return sum + (p ? Number(p.price) * qty : 0);
+  }, 0);
+
+  document.getElementById("total").textContent =
+    `Seçilen ürünler: ${money(selected)}`;
 }
 
 document.getElementById("search").addEventListener("input", render);
 
-// + -
-window.arttir = (id)=>{
+window.arttir = id => {
   secim[id] = (secim[id] || 0) + 1;
-  document.getElementById("qty_"+id).innerText = secim[id];
-};
-
-window.azalt = (id)=>{
-  if(!secim[id]) return;
-  secim[id]--;
-  document.getElementById("qty_"+id).innerText = secim[id] || 0;
-};
-
-// sipariş
-window.siparis = async ()=>{
-
-  let items = [];
-  let total = 0;
-
-  for(let id in secim){
-
-    const urun = kategoriler.flatMap(k=>k.items).find(p=>p.id===id);
-
-    if(!urun) continue;
-
-    items.push({
-      id:urun.id,
-      name:urun.name,
-      price:urun.price,
-      qty:secim[id]
-    });
-
-    total += urun.price * secim[id];
-  }
-
-  if(items.length===0){
-    return alert("Ürün seçmediniz");
-  }
-
-  await addDoc(collection(db,"orders"),{
-    table: masa,
-    items,
-    total,
-    closed:false,
-    createdAt: serverTimestamp()
-  });
-
-  alert("Sipariş gönderildi");
-
-  secim = {};
   render();
 };
 
-// 🔥 CANLI HESAP
-function hesapDinle(){
+window.azalt = id => {
+  if (!secim[id]) return;
+  secim[id]--;
+  if (secim[id] <= 0) delete secim[id];
+  render();
+};
 
-  onSnapshot(collection(db,"orders"), (snap)=>{
+window.siparis = async () => {
+  try {
+    if (!personId) return alert("Önce adınızı girin.");
 
-    let html = "";
+    const items = [];
     let total = 0;
 
-    snap.forEach(d=>{
-      const o = d.data();
+    for (const [id, qty] of Object.entries(secim)) {
+      const p = kategoriler.flatMap(k => k.items).find(x => x.id === id);
+      if (!p || qty <= 0) continue;
 
-      if(o.table !== masa) return;
-      if(o.closed === true) return;
-
-      (o.items || []).forEach(i=>{
-        html += `${i.name} x${i.qty}<br>`;
-        total += i.price * i.qty;
+      items.push({
+        id: p.id, name: p.name,
+        price: Number(p.price), qty: Number(qty)
       });
-    });
+      total += Number(p.price) * Number(qty);
+    }
 
-    document.getElementById("cartItems").innerHTML =
-      html || "Henüz sipariş yok";
+    if (!items.length) return alert("Ürün seçmediniz.");
 
-    document.getElementById("cartTotal").innerText =
-      "Toplam: " + total + "₺";
+    const order = {
+      table: masa, personId, personName, items, total,
+      closed: false, status: "new",
+      createdAt: serverTimestamp()
+    };
 
-    document.getElementById("total").innerText =
-      "Toplam: " + total + "₺";
+    if (qrToken) order.qrToken = qrToken;
+
+    await addDoc(collection(db, "orders"), order);
+    alert("Siparişiniz masanın hesabına eklendi.");
+    secim = {};
+    render();
+  } catch (err) {
+    console.error(err);
+    alert("Sipariş gönderilemedi. Firebase bağlantısını ve Firestore kurallarını kontrol edin.");
+  }
+};
+
+function hesapDinle() {
+  const q = query(collection(db, "orders"), where("table", "==", masa));
+
+  onSnapshot(q, snap => {
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAccount();
+  }, err => {
+    console.error(err);
+    showError("Siparişler okunamadı. Firestore kurallarını kontrol edin.");
   });
 
+  const pq = query(collection(db, "payments"), where("table", "==", masa));
+
+  onSnapshot(pq, snap => {
+    confirmedPayments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAccount();
+  }, err => console.warn("Ödeme kayıtları okunamadı.", err));
 }
 
-// garson
-window.garson = async ()=>{
-  await addDoc(collection(db,"calls"),{
-    table: masa,
-    createdAt: serverTimestamp()
-  });
-  alert("Garson geliyor");
+function activeOrders() {
+  return allOrders.filter(o => o.closed !== true && o.status !== "cancelled");
+}
+
+function orderAmount(o) {
+  return Number(o.total || 0);
+}
+
+function paidAmount() {
+  return confirmedPayments
+    .filter(p => p.status === "confirmed")
+    .reduce((s,p) => s + Number(p.amount || 0), 0);
+}
+
+function renderAccount() {
+  const orders = activeOrders();
+  const total = orders.reduce((s,o) => s + orderAmount(o), 0);
+  const paid = paidAmount();
+  const own = orders
+    .filter(o => o.personId === personId)
+    .reduce((s,o) => s + orderAmount(o), 0);
+
+  const lines = orders.map(o => {
+    const products = (o.items || []).map(i => {
+      const qty = Number(i.qty || i.quantity || 1);
+      return `${esc(i.name || "Ürün")} ×${qty} (${money(Number(i.price || 0) * qty)})`;
+    }).join("<br>");
+
+    return `<div class="accountRow">
+      <div><strong>${esc(o.personName || "Müşteri")}</strong><br>
+      ${products}<div class="muted">${esc(o.status || "Alındı")}</div></div>
+      <strong>${money(orderAmount(o))}</strong>
+    </div>`;
+  }).join("");
+
+  document.getElementById("cartItems").innerHTML = lines || "Henüz sipariş yok";
+  document.getElementById("cartTotal").textContent = money(total);
+  document.getElementById("paidTotal").textContent = money(paid);
+  document.getElementById("remainingTotal").textContent = money(Math.max(0, total - paid));
+
+  const scope = document.getElementById("payScope").value;
+  const input = document.getElementById("payAmount");
+
+  if (input && !input.value) {
+    input.placeholder = scope === "own"
+      ? `Kendi hesabınız (en fazla ${money(own)})`
+      : `Ortak hesaba katkı (kalan ${money(Math.max(0, total - paid))})`;
+  }
+}
+
+document.getElementById("payScope").addEventListener("change", () => {
+  document.getElementById("payAmount").value = "";
+  renderAccount();
+});
+
+window.odemeTalebi = async () => {
+  const msg = document.getElementById("payMessage");
+  const btn = document.getElementById("payRequestBtn");
+
+  try {
+    const scope = document.getElementById("payScope").value;
+    const method = document.getElementById("payMethod").value;
+    const amount = Number(document.getElementById("payAmount").value);
+    const orders = activeOrders();
+    const total = orders.reduce((s,o) => s + orderAmount(o), 0);
+    const remaining = Math.max(0, total - paidAmount());
+    const own = orders
+      .filter(o => o.personId === personId)
+      .reduce((s,o) => s + orderAmount(o), 0);
+
+    if (!Number.isFinite(amount) || amount <= 0)
+      throw new Error("Geçerli bir ödeme tutarı girin.");
+
+    if (amount > remaining)
+      throw new Error("Tutar kalan masa borcundan fazla olamaz.");
+
+    if (scope === "own" && amount > own)
+      throw new Error("Tutar kendi siparişlerinizin toplamından fazla olamaz.");
+
+    btn.disabled = true;
+
+    const request = {
+      table: masa, personId, personName, scope, method,
+      amount, status: "pending", createdAt: serverTimestamp()
+    };
+
+    if (qrToken) request.qrToken = qrToken;
+
+    await addDoc(collection(db, "paymentRequests"), request);
+
+    msg.textContent =
+      "Ödeme talebi işletmeye iletildi. Tahsilat, işletme tarafından onaylanınca hesaba işlenecek.";
+    document.getElementById("payAmount").value = "";
+  } catch (err) {
+    msg.textContent = err.message || "Ödeme talebi oluşturulamadı.";
+  } finally {
+    btn.disabled = false;
+  }
 };
 
-// hesap
-window.hesap = async ()=>{
-  await addDoc(collection(db,"billRequests"),{
-    table: masa,
-    createdAt: serverTimestamp()
-  });
-  alert("Hesap istendi");
+window.garson = async () => {
+  try {
+    await addDoc(collection(db, "calls"), {
+      table: masa, personId, personName, createdAt: serverTimestamp()
+    });
+    alert("Garson çağrısı gönderildi.");
+  } catch (e) {
+    console.error(e);
+    alert("Garson çağrısı gönderilemedi.");
+  }
 };
 
-// panel
-window.acSepet = ()=> document.getElementById("cartPanel").classList.add("active");
-window.kapatSepet = ()=> document.getElementById("cartPanel").classList.remove("active");
+window.hesap = async () => {
+  try {
+    await addDoc(collection(db, "billRequests"), {
+      table: masa, personId, personName,
+      createdAt: serverTimestamp(), status: "pending"
+    });
+    alert("Hesap isteğiniz iletildi.");
+  } catch (e) {
+    console.error(e);
+    alert("Hesap isteği gönderilemedi.");
+  }
+};
 
-loadMenu();
-hesapDinle();
+window.acSepet = () =>
+  document.getElementById("cartPanel").classList.add("active");
 
+window.kapatSepet = () =>
+  document.getElementById("cartPanel").classList.remove("active");
+
+function showError(text) {
+  const e = document.getElementById("pageError");
+  e.hidden = false;
+  e.textContent = text;
+}
 </script>
-
 </body>
 </html>
