@@ -4,79 +4,114 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rüzgar Gülü Sistem</title>
-
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f4f6f9;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
-
-.container{
-  text-align:center;
+.container {
+  text-align: center;
+  padding: 20px;
 }
-
-h1{
-  margin-bottom:30px;
+h1 {
+  margin-bottom: 30px;
+  font-size: 36px;
 }
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-  max-width:400px;
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  max-width: 400px;
 }
-
-.card{
-  padding:20px;
-  border-radius:12px;
-  color:white;
-  font-weight:bold;
-  font-size:18px;
-  text-align:center;
+.card {
+  display: block;
+  padding: 25px 15px;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+  font-size: 22px;
+  text-align: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  font-family: inherit;
 }
-
-.menu{ background:#28a745; }
-.panel{ background:#ff9800; }
-.admin{ background:#1976d2; }
-
-a{
-  text-decoration:none;
+.menu {
+  background: #28a745;
 }
-
-.card:hover{
-  opacity:0.9;
+.panel {
+  background: #ff9800;
+}
+.admin {
+  background: #1976d2;
+}
+a {
+  text-decoration: none;
+}
+.card:hover {
+  opacity: 0.9;
+}
+@media (max-width: 350px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  h1 {
+    font-size: 29px;
+  }
+  .card {
+    font-size: 18px;
+  }
 }
 </style>
 </head>
-
 <body>
-
 <div class="container">
-
 <h1>🌊 Rüzgar Gülü</h1>
-
 <div class="grid">
-
-<a href="menu.html?table=1">
-  <div class="card menu">🍽 Menü</div>
-</a>
-
-<a href="panel.html">
-  <div class="card panel">🔥 Panel</div>
-</a>
-
-<a href="admin.html">
-  <div class="card admin">⚙️ Yönetim</div>
-</a>
-
+  <!-- Menü: Şifre sormadan açılır -->
+  <a
+    href="https://ruzgargulucafe.github.io/RuzgarGuluMenu/fiyat-menu.html"
+    class="card menu">
+    🍽️ Menü
+  </a>
+  <!-- Panel: Her tıklamada şifre sorar -->
+  <button
+    type="button"
+    class="card panel"
+    onclick="sifreKontrol('panel.html', 'panel')">
+    🔥 Panel
+  </button>
+  <!-- Yönetim: Her tıklamada şifre sorar -->
+  <button
+    type="button"
+    class="card admin"
+    onclick="sifreKontrol('admin.html', 'admin')">
+    ⚙️ Yönetim
+  </button>
 </div>
-
 </div>
-
+<script>
+function sifreKontrol(hedefSayfa, bolum) {
+  const sifreler = {
+    panel: "Rüzgar14102026",
+    admin: "Rüzgar14102026"
+  };
+  const girilenSifre = prompt("🔐 Şifrenizi girin:");
+  // İptal edilirse sayfa açılmaz.
+  if (girilenSifre === null) return;
+  if (girilenSifre === sifreler[bolum]) {
+    // Doğru şifre girilince ilgili sayfa açılır.
+    window.location.href = hedefSayfa;
+  } else {
+    alert("❌ Hatalı şifre!");
+  }
+}
+</script>
 </body>
 </html>
