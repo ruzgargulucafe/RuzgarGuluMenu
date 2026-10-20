@@ -304,13 +304,20 @@ function hesapVeOdemeGoster() {
 // TAM ÖDENDİYSE SİPARİŞLERİ KAPAT
 // =========================
 
-async function masayiKontrolEtVeKapat(masa) {
+async function masayiKontrolEtVeKapat(masa, orderIds = []) {
   const masaAnahtari = String(masa);
+  const hedefIds = [...new Set(orderIds.map(String))];
 
-  // Aynı masa için eş zamanlı birden fazla kontrolü önle
-  if (masaKapatmaIslemleri.has(masaAnahtari)) return;
+  if (hedefIds.length === 0) {
+    console.warn("Ödeme talebinde sipariş kimlikleri yok. Masa kapatılmadı.");
+    return;
+  }
 
-  masaKapatmaIslemleri.add(masaAnahtari);
+  const islemAnahtari =
+    `${masaAnahtari}:${[...hedefIds].sort().join(",")}`;
+
+  if (masaKapatmaIslemleri.has(islemAnahtari)) return;
+  masaKapatmaIslemleri.add(islemAnahtari);
 
   try {
     const [siparisSnap, odemeSnap] = await Promise.all([
@@ -318,60 +325,84 @@ async function masayiKontrolEtVeKapat(masa) {
       getDocs(collection(db, "payments"))
     ]);
 
-    // Masanın hâlâ açık olan siparişleri
-    const acikSiparisler = siparisSnap.docs.filter(d => {
-      const siparis = d.data();
+    const hedefSiparisler = siparisSnap.docs.filter(d => {
+      const s = d.data();
 
-      return String(siparis.table) === masaAnahtari
-        && siparis.closed !== true;
+      return hedefIds.includes(d.id)
+        && String(s.table) === masaAnahtari
+        && s.closed !== true
+        && String(s.status || "").toLowerCase() !== "cancelled";
     });
 
-    if (!acikSiparisler.length) return;
-
-    // Açık siparişlerin toplam borcu
-    const masaToplami = acikSiparisler.reduce((toplam, d) => {
-      const siparis = d.data();
-      return toplam + Number(siparis.total || 0);
-    }, 0);
-
-    // Aynı masaya ait onaylanmış tahsilatlar
-    const onayliOdemeler = odemeSnap.docs
-      .filter(d => {
-        const odeme = d.data();
-
-        return String(odeme.table) === masaAnahtari
-          && odeme.status === "confirmed";
-      })
-      .reduce((toplam, d) => {
-        return toplam + Number(d.data().amount || 0);
-      }, 0);
-
-    // Borç sıfırdan büyük olmalı ve tamamı tahsil edilmiş olmalı
-    if (masaToplami > 0 && onayliOdemeler >= masaToplami) {
-      for (const d of acikSiparisler) {
-        await updateDoc(doc(db, "orders", d.id), {
-          closed: true,
-          paymentType: "QR",
-          paidAt: serverTimestamp()
-        });
-      }
-
-      console.log(
-        `Masa ${masaAnahtari}: hesap tamamen ödendi, açık siparişler kapatıldı.`
+    if (hedefSiparisler.length !== hedefIds.length) {
+      console.warn(
+        "Siparişlerin bir kısmı bulunamadı veya zaten kapalı. " +
+        "Otomatik kapatma yapılmadı."
       );
-    } else {
-      console.log(
-        `Masa ${masaAnahtari}: ${masaToplami} ₺ borç, ` +
-        `${onayliOdemeler} ₺ onaylı ödeme. Masa açık kalıyor.`
-      );
+      return;
     }
+
+    const masaToplami = hedefSiparisler.reduce(
+      (sum, d) => sum + Number(d.data().total || 0),
+      0
+    );
+
+    if (!Number.isFinite(masaToplami) || masaToplami <= 0) {
+      console.warn("Hesap toplamı geçersiz. Masa kapatılmadı.");
+      return;
+    }
+
+    const hedefKey = [...hedefIds].sort().join("|");
+
+    const onayliOdemeler = odemeSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => {
+        if (
+          String(p.table) !== masaAnahtari ||
+          p.status !== "confirmed" ||
+          !Array.isArray(p.orderIds)
+        ) {
+          return false;
+        }
+
+        return [...new Set(p.orderIds.map(String))]
+          .sort()
+          .join("|") === hedefKey;
+      })
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    if (onayliOdemeler < masaToplami) {
+      console.log(
+        `Masa ${masaAnahtari}: ${masaToplami} ₺ hesap, ` +
+        `${onayliOdemeler} ₺ ödeme. Masa açık kalıyor.`
+      );
+      return;
+    }
+
+    if (onayliOdemeler > masaToplami) {
+      console.warn(
+        "Ödemeler hesap toplamını aşıyor. Masa kapatılmadı."
+      );
+      return;
+    }
+
+    for (const d of hedefSiparisler) {
+      await updateDoc(doc(db, "orders", d.id), {
+        closed: true,
+        paymentType: "QR",
+        paidAt: serverTimestamp()
+      });
+    }
+
+    console.log(`Masa ${masaAnahtari} hesabı kapatıldı.`);
   } catch (error) {
     console.error("Masa hesabı kontrol edilemedi:", error);
     throw error;
   } finally {
-    masaKapatmaIslemleri.delete(masaAnahtari);
+    masaKapatmaIslemleri.delete(islemAnahtari);
   }
 }
+
 
 // =========================
 // NORMAL HESAP İSTEKLERİNİ DİNLE
