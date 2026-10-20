@@ -473,10 +473,15 @@ onSnapshot(
 window.qrOdemeyiOnayla = async function(id) {
   const talep = paymentRequestsData.find(p => p.id === id);
 
-  if (!talep) {
-    alert("Ödeme talebi bulunamadı veya artık beklemiyor.");
-    return;
-  }
+if (!talep) {
+  alert("Ödeme talebi bulunamadı veya artık beklemiyor.");
+  return;
+}
+
+if (talep.status !== "pending") {
+  alert("Bu ödeme talebi zaten işlenmiş veya beklemede değil.");
+  return;
+}
 
   const tutar = Number(talep.amount || 0);
 
