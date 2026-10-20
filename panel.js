@@ -270,10 +270,12 @@ function hesapVeOdemeGoster() {
 
           Tür:
           ${guvenliMetin(
-            p.scope === "shared"
-              ? "Ortak hesaba katkı"
-              : "Kendi hesabı"
-          )}<br>
+  p.scope === "shared"
+    ? "Ortak hesaba katkı"
+    : p.scope === "own_friend"
+      ? "Kendi hesabım + arkadaşımın hesabı"
+      : "Kendi hesabı"
+)}<br>
 
           İstenen yöntem:
           ${guvenliMetin(p.method || "Belirtilmemiş")}<br>
