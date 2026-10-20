@@ -297,14 +297,8 @@ function hesapVeOdemeGoster() {
         });
       }
 
-      alert("Tahsilat kaydedildi. Masanın tüm hesabı ödendi ve masa otomatik kapatıldı.");
-    } else {
-      alert(
-        "Tahsilat kaydedildi. Kalan masa borcu: " +
-        Math.max(0, masaToplami - onayliOdemeler).toLocaleString("tr-TR") +
-        " ₺"
-      );
-    }
+    alan.innerHTML = html || "Bekleyen hesap veya ödeme isteği yok.";
+}
 
 // Hesap isteklerini dinle
 onSnapshot(collection(db, "billRequests"), snap => {
