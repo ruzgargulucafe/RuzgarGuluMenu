@@ -523,6 +523,9 @@ window.qrOdemeyiOnayla = async function(id) {
       personId: talep.personId || null,
       personName: talep.personName || "",
       scope: talep.scope || "own",
+      orderIds: Array.isArray(talep.orderIds)
+  ? talep.orderIds
+  : [],
       amount: tutar,
       paymentType,
       method: paymentType,
