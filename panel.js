@@ -546,7 +546,10 @@ window.qrOdemeyiOnayla = async function(id) {
 
     // Ödeme sonrası masanın borcunu kontrol et
     try {
-      await masayiKontrolEtVeKapat(talep.table);
+      await masayiKontrolEtVeKapat(
+  talep.table,
+  talep.orderIds || []
+);
     } catch (kapatmaHatasi) {
       alert(
         "Tahsilat kaydedildi ancak masa kapatılamadı. " +
