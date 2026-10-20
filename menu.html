@@ -97,9 +97,10 @@ body{margin:0;font-family:'Poppins',sans-serif;background:#f3f3f3;padding-bottom
     <p class="muted">Kendi siparişleriniz için ödeme yapabilir veya ortak hesaba katkı tutarı girebilirsiniz. Ödeme talebi, işletme tarafından onaylanmalıdır.</p>
     <div class="payControls">
       <select id="payScope">
-        <option value="own">Kendi siparişlerim için ödeme</option>
-        <option value="shared">Ortak hesaba katkı</option>
-      </select>
+  <option value="own">Kendi siparişlerim için ödeme</option>
+  <option value="own_friend">Kendi hesabım + arkadaşımın hesabı</option>
+  <option value="shared">Ortak hesaba katkı</option>
+</select>
       <input id="payAmount" type="number" min="0.01" step="0.01" placeholder="Tutar (₺)">
       <select id="payMethod">
         <option value="POS">POS / kart (işletmede)</option>
