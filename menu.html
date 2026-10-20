@@ -462,8 +462,17 @@ if (orderIds.length === 0) {
     if (amount > remaining)
       throw new Error("Tutar kalan masa borcundan fazla olamaz.");
 
-    if (scope === "own" && amount > own)
-      throw new Error("Tutar kendi siparişlerinizin toplamından fazla olamaz.");
+    if (scope === "own" && amount > own) {
+  throw new Error(
+    "Tutar kendi siparişlerinizin toplamından fazla olamaz."
+  );
+}
+
+if (scope === "own_friend" && amount > total) {
+  throw new Error(
+    "Tutar masadaki açık siparişlerin toplamından fazla olamaz."
+  );
+}
 
     btn.disabled = true;
 
