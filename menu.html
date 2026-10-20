@@ -410,9 +410,15 @@ function renderAccount() {
   const input = document.getElementById("payAmount");
 
   if (input && !input.value) {
-    input.placeholder = scope === "own"
-      ? `Kendi hesabınız (en fazla ${money(own)})`
-      : `Ortak hesaba katkı (kalan ${money(Math.max(0, total - paid))})`;
+  if (scope === "own") {
+    input.placeholder =
+      `Kendi hesabınız (en fazla ${money(own)})`;
+  } else if (scope === "own_friend") {
+    input.placeholder =
+      `Kendi hesabınız + arkadaşlar (en fazla ${money(total)})`;
+  } else {
+    input.placeholder =
+      `Ortak hesaba katkı (kalan ${money(Math.max(0, total - paid))})`;
   }
 }
 
