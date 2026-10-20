@@ -214,17 +214,6 @@ let billRequestsData = [];
 let paymentRequestsData = [];
 let masaKapatmaIslemleri = new Set();
 
-// Güvenli metin gösterimi
-function guvenliMetin(deger) {
-  return String(deger ?? "").replace(/[&<>"']/g, karakter => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[karakter]);
-}
-
 // =========================
 // HESAP VE QR TALEPLERİNİ GÖSTER
 // =========================
