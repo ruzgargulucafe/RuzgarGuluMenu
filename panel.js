@@ -204,57 +204,181 @@ window.silCall = async id => {
   }
 };
 
-// =========================
-// HESAP İSTEKLERİ
-// =========================
 
-onSnapshot(collection(db, "billRequests"), async snap => {
-  try {
-    const ordersSnap = await getDocs(collection(db, "orders"));
-    let html = "";
+ // =========================
+ // HESAP İSTEKLERİ + QR ÖDEME TALEPLERİ
+ // =========================
 
-    snap.forEach(d => {
-      const b = d.data();
-      const tarih = b.createdAt?.toDate?.().toLocaleString("tr-TR") || "";
+let billRequestsData = [];
+let paymentRequestsData = [];
 
-      let toplam = 0;
-      let urunler = "";
+function hesapVeOdemeGoster() {
+  const alan = document.getElementById("bills");
+  let html = "";
 
-      ordersSnap.forEach(oDoc => {
-        const o = oDoc.data();
+  // Normal hesap istekleri
+  if (billRequestsData.length) {
+    html += `<h3>🧾 Hesap İstekleri</h3>`;
 
-        if (o.table === b.table && !o.closed) {
-          toplam += Number(o.total || 0);
-          urunler += urunListesi(o.items);
-        }
-      });
-
+    billRequestsData.forEach(b => {
       html += `
         <div class="card">
-          <b>Masa: ${guvenliMetin(b.table)}</b><br><br>
-          ${urunler || "Ürün bulunamadı."}
-          <p><b>Toplam: ${toplam}₺</b></p>
-          <small>${tarih}</small><br><br>
-
+          <b>Masa: ${guvenliMetin(b.table)}</b><br>
+          <small>${guvenliMetin(b.tarih)}</small><br>
+          <p>Masadaki tüm hesabın tahsil edilmesi isteniyor.</p>
           <button class="orange"
-            onclick="odemeAl('${guvenliMetin(b.table)}','${d.id}','Nakit')">
-            💵 Nakit
+            onclick="odemeAl('${guvenliMetin(b.table)}','${b.id}','Nakit')">
+            💵 Nakit al
           </button>
+          <button class="green"
+            onclick="odemeAl('${guvenliMetin(b.table)}','${b.id}','Kart')">
+            💳 Kart al
+          </button>
+        </div>`;
+    });
+  }
+
+  // QR menüden gelen ödeme talepleri
+  if (paymentRequestsData.length) {
+    html += `<h3>💸 QR Ödeme Talepleri</h3>`;
+
+    paymentRequestsData.forEach(p => {
+      html += `
+        <div class="card">
+          <b>Masa: ${guvenliMetin(p.table)}</b><br>
+          Müşteri: ${guvenliMetin(p.personName || "Belirtilmemiş")}<br>
+          Tutar: <b>${Number(p.amount || 0).toLocaleString("tr-TR")} ₺</b><br>
+          Tür: ${guvenliMetin(p.scope === "shared" ? "Ortak hesaba katkı" : "Kendi hesabı")}<br>
+          İstenen yöntem: ${guvenliMetin(p.method || "Belirtilmemiş")}<br>
+          <small>${guvenliMetin(p.tarih || "")}</small><br>
+          <span style="color:#ff9800">⏳ Ödeme onayı bekleniyor</span><br>
 
           <button class="green"
-            onclick="odemeAl('${guvenliMetin(b.table)}','${d.id}','Kart')">
-            💳 Kart
+            onclick="qrOdemeyiOnayla('${p.id}')">
+            ✔ Tahsilatı Onayla
           </button>
-        </div>
-      `;
+
+          <button class="red"
+            onclick="qrOdemeyiReddet('${p.id}')">
+            ✖ Reddet
+          </button>
+        </div>`;
+    });
+  }
+
+  alan.innerHTML = html || "Bekleyen hesap veya ödeme isteği yok.";
+}
+
+// Hesap isteklerini dinle
+onSnapshot(collection(db, "billRequests"), snap => {
+  billRequestsData = snap.docs
+    .filter(d => d.data().status !== "Tamamlandı")
+    .map(d => {
+      const b = d.data();
+      return {
+        id: d.id,
+        ...b,
+        tarih: b.createdAt?.toDate?.().toLocaleString("tr-TR") || ""
+      };
     });
 
-    document.getElementById("bills").innerHTML = html || "Yok";
-  } catch (error) {
-    console.error("Hesap istekleri okunamadı:", error);
-    document.getElementById("bills").textContent = "Hesap istekleri yüklenemedi.";
-  }
+  hesapVeOdemeGoster();
+}, error => {
+  console.error("Hesap istekleri okunamadı:", error);
 });
+
+// QR ödeme taleplerini dinle
+onSnapshot(collection(db, "paymentRequests"), snap => {
+  paymentRequestsData = snap.docs
+    .filter(d => !["confirmed", "rejected"].includes(
+      String(d.data().status || "").toLowerCase()
+    ))
+    .map(d => {
+      const p = d.data();
+      return {
+        id: d.id,
+        ...p,
+        tarih: p.createdAt?.toDate?.().toLocaleString("tr-TR") || ""
+      };
+    });
+
+  hesapVeOdemeGoster();
+}, error => {
+  console.error("QR ödeme talepleri okunamadı:", error);
+  document.getElementById("bills").textContent =
+    "Ödeme talepleri yüklenemedi. Firebase kurallarını kontrol edin.";
+});
+
+// QR ödeme tahsilatını onayla
+window.qrOdemeyiOnayla = async id => {
+  const talep = paymentRequestsData.find(p => p.id === id);
+  if (!talep) return alert("Ödeme talebi bulunamadı.");
+
+  const tutar = Number(talep.amount || 0);
+  if (tutar <= 0) return alert("Ödeme tutarı geçersiz.");
+
+  const secim = prompt(
+    "Tahsilatı gerçekten aldıysanız ödeme yöntemini yazın:\nNakit veya Kart",
+    talep.method === "Nakit" ? "Nakit" : "Kart"
+  );
+
+  if (secim === null) return;
+
+  const yontem = secim.trim().toLocaleLowerCase("tr-TR");
+  let paymentType;
+
+  if (yontem === "nakit") paymentType = "Nakit";
+  else if (yontem === "kart" || yontem === "pos") paymentType = "Kart";
+  else return alert("Yöntem olarak yalnızca Nakit veya Kart yazın.");
+
+  if (!confirm(
+    `${talep.table} için ${tutar} ₺ ${paymentType} tahsilatını gerçekten aldınız mı?`
+  )) return;
+
+  try {
+    // Tahsilat kaydı
+    await addDoc(collection(db, "payments"), {
+      table: talep.table,
+      personId: talep.personId || null,
+      personName: talep.personName || "",
+      scope: talep.scope || "own",
+      amount: tutar,
+      paymentType,
+      method: paymentType,
+      status: "confirmed",
+      paymentRequestId: id,
+      paidAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    });
+
+    // Talebi onaylandı olarak işaretle
+    await updateDoc(doc(db, "paymentRequests", id), {
+      status: "confirmed",
+      confirmedMethod: paymentType,
+      confirmedAt: serverTimestamp()
+    });
+
+    alert("Tahsilat kaydedildi. Masa siparişleri otomatik kapatılmadı.");
+  } catch (error) {
+    console.error("QR tahsilat hatası:", error);
+    alert("Tahsilat kaydedilemedi: " + (error.message || error));
+  }
+};
+
+// QR ödeme talebini reddet
+window.qrOdemeyiReddet = async id => {
+  if (!confirm("Bu ödeme talebini reddetmek istiyor musunuz?")) return;
+
+  try {
+    await updateDoc(doc(db, "paymentRequests", id), {
+      status: "rejected",
+      rejectedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error(error);
+    alert("Talep reddedilemedi.");
+  }
+};
 
 // =========================
 // ÖDEME AL
