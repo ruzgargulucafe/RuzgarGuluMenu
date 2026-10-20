@@ -266,6 +266,46 @@ function hesapVeOdemeGoster() {
     });
   }
 
+    // Masanın toplam borcunu ve onaylı ödemelerini hesapla
+    const masaSiparisleri = await getDocs(collection(db, "orders"));
+    const masaOdemeleri = await getDocs(collection(db, "payments"));
+
+    const acikSiparisler = masaSiparisleri.docs.filter(d => {
+      const o = d.data();
+      return String(o.table) === String(talep.table) && o.closed !== true;
+    });
+
+    const masaToplami = acikSiparisler.reduce(
+      (sum, d) => sum + Number(d.data().total || 0), 0
+    );
+
+    const onayliOdemeler = masaOdemeleri.docs
+      .filter(d => {
+        const p = d.data();
+        return String(p.table) === String(talep.table)
+          && p.status === "confirmed";
+      })
+      .reduce((sum, d) => sum + Number(d.data().amount || 0), 0);
+
+    // Toplam hesap tamamen ödendiyse açık siparişleri kapat
+    if (masaToplami > 0 && onayliOdemeler >= masaToplami) {
+      for (const d of acikSiparisler) {
+        await updateDoc(doc(db, "orders", d.id), {
+          closed: true,
+          paymentType: "QR",
+          paidAt: serverTimestamp()
+        });
+      }
+
+      alert("Tahsilat kaydedildi. Masanın tüm hesabı ödendi ve masa otomatik kapatıldı.");
+    } else {
+      alert(
+        "Tahsilat kaydedildi. Kalan masa borcu: " +
+        Math.max(0, masaToplami - onayliOdemeler).toLocaleString("tr-TR") +
+        " ₺"
+      );
+    }
+
   alan.innerHTML = html || "Bekleyen hesap veya ödeme isteği yok.";
 }
 
