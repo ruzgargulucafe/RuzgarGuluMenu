@@ -411,53 +411,79 @@ window.odemeAl = async (masa, requestId, tip) => {
   }
 };
 
-// =========================
-// GÜNLÜK KASA
-// =========================
 
-onSnapshot(collection(db, "orders"), snap => {
+ // =========================
+ // GÜNLÜK KASA — SİPARİŞLER + QR ÖDEMELERİ
+ // =========================
+
+let kasaOrders = [];
+let kasaPayments = [];
+
+function gunlukKasayiGoster() {
   let toplam = 0;
   let nakit = 0;
   let kart = 0;
 
   const today = new Date();
 
-  snap.forEach(d => {
-    const o = d.data();
-    if (!o || !o.closed || !o.paymentType || !o.paidAt || o.dayClosed) return;
+  // Eski sistemden kaydedilen kapatılmış siparişler
+  kasaOrders.forEach(o => {
+    if (!o.closed || !o.paymentType || !o.paidAt || o.dayClosed) return;
 
-    let tarih;
-    try {
-      tarih = o.paidAt.toDate();
-    } catch {
-      return;
-    }
+    const tarih = o.paidAt?.toDate?.();
+    if (!tarih || !ayniGun(tarih, today)) return;
 
-    if (
-      tarih.getDate() === today.getDate() &&
-      tarih.getMonth() === today.getMonth() &&
-      tarih.getFullYear() === today.getFullYear()
-    ) {
-      const tutar = Number(o.total || 0);
-      toplam += tutar;
+    const tutar = Number(o.total || 0);
+    toplam += tutar;
 
-      if (o.paymentType === "Nakit") nakit += tutar;
-      if (o.paymentType === "Kart") kart += tutar;
-    }
+    if (o.paymentType === "Nakit") nakit += tutar;
+    if (o.paymentType === "Kart") kart += tutar;
+  });
+
+  // QR menüden alınmış ve onaylanmış tahsilatlar
+  kasaPayments.forEach(p => {
+    if (p.status !== "confirmed" || p.dayClosed === true) return;
+
+    const tarih = p.paidAt?.toDate?.() || p.createdAt?.toDate?.();
+    if (!tarih || !ayniGun(tarih, today)) return;
+
+    const tutar = Number(p.amount || 0);
+    toplam += tutar;
+
+    const yontem = p.paymentType || p.method;
+
+    if (yontem === "Nakit") nakit += tutar;
+    if (yontem === "Kart" || yontem === "POS") kart += tutar;
   });
 
   document.getElementById("kasa").innerHTML = `
     <div class="card">
-      <b>Toplam:</b> ${toplam}₺<br>
-      💵 Nakit: ${nakit}₺<br>
-      💳 Kart: ${kart}₺
+      <b>Toplam: ${toplam.toLocaleString("tr-TR")}₺</b><br>
+      💵 Nakit: ${nakit.toLocaleString("tr-TR")}₺<br>
+      💳 Kart: ${kart.toLocaleString("tr-TR")}₺
     </div>
   `;
+}
+
+function ayniGun(a, b) {
+  return a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+}
+
+onSnapshot(collection(db, "orders"), snap => {
+  kasaOrders = snap.docs.map(d => d.data());
+  gunlukKasayiGoster();
 }, error => {
-  console.error("Kasa yüklenemedi:", error);
-  document.getElementById("kasa").textContent = "Kasa yüklenemedi.";
+  console.error("Sipariş kasası okunamadı:", error);
 });
 
+onSnapshot(collection(db, "payments"), snap => {
+  kasaPayments = snap.docs.map(d => d.data());
+  gunlukKasayiGoster();
+}, error => {
+  console.error("QR ödeme kasası okunamadı:", error);
+});
 
  // =========================
  // GÜN SONU KAPAT
