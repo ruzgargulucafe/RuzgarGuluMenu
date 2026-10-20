@@ -575,7 +575,9 @@ qrOnayIslemleri.add(id);
       (error.message || String(error)) +
       "\nTahsilat kaydı oluşmuş olabilir. Tekrar onaylamadan önce kasayı kontrol edin."
     );
-  }
+  } finally {
+  qrOnayIslemleri.delete(id);
+}
 };
 
 // =========================
