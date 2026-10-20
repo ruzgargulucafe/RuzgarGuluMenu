@@ -423,6 +423,15 @@ window.odemeTalebi = async () => {
     const orders = activeOrders();
     const total = orders.reduce((s,o) => s + orderAmount(o), 0);
     const remaining = Math.max(0, total - paidAmount());
+    const hedefSiparisler = scope === "shared"
+  ? orders
+  : orders.filter(o => o.personId === personId);
+
+const orderIds = hedefSiparisler.map(o => o.id);
+
+if (orderIds.length === 0) {
+  throw new Error("Ödeme için açık sipariş bulunamadı.");
+}
     const own = orders
       .filter(o => o.personId === personId)
       .reduce((s,o) => s + orderAmount(o), 0);
@@ -438,10 +447,17 @@ window.odemeTalebi = async () => {
 
     btn.disabled = true;
 
-    const request = {
-      table: masa, personId, personName, scope, method,
-      amount, status: "pending", createdAt: serverTimestamp()
-    };
+   const request = {
+  table: masa,
+  personId,
+  personName,
+  scope,
+  method,
+  amount,
+  orderIds,
+  status: "pending",
+  createdAt: serverTimestamp()
+};
 
     if (qrToken) request.qrToken = qrToken;
 
