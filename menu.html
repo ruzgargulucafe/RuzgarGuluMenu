@@ -421,7 +421,6 @@ function renderAccount() {
       `Ortak hesaba katkı (kalan ${money(Math.max(0, total - paid))})`;
   }
  }
-}
 document.getElementById("payScope").addEventListener("change", () => {
   document.getElementById("payAmount").value = "";
   renderAccount();
