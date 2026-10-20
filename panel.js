@@ -306,9 +306,6 @@ function hesapVeOdemeGoster() {
       );
     }
 
-  alan.innerHTML = html || "Bekleyen hesap veya ödeme isteği yok.";
-}
-
 // Hesap isteklerini dinle
 onSnapshot(collection(db, "billRequests"), snap => {
   billRequestsData = snap.docs
