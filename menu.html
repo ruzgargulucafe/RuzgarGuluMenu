@@ -432,9 +432,20 @@ window.odemeTalebi = async () => {
     const orders = activeOrders();
     const total = orders.reduce((s,o) => s + orderAmount(o), 0);
     const remaining = Math.max(0, total - paidAmount());
-    const hedefSiparisler = scope === "shared"
-  ? orders
-  : orders.filter(o => o.personId === personId);
+    let hedefSiparisler;
+
+if (scope === "shared") {
+  // Masadaki bütün açık siparişler
+  hedefSiparisler = orders;
+} else if (scope === "own_friend") {
+  // Kendi siparişlerim + aynı masadaki arkadaşların siparişleri
+  hedefSiparisler = orders;
+} else {
+  // Yalnızca kendi siparişlerim
+  hedefSiparisler = orders.filter(
+    o => o.personId === personId
+  );
+}
 
 const orderIds = hedefSiparisler.map(o => o.id);
 
