@@ -213,6 +213,7 @@ window.silCall = async id => {
 let billRequestsData = [];
 let paymentRequestsData = [];
 let masaKapatmaIslemleri = new Set();
+let qrOnayIslemleri = new Set();
 
 // =========================
 // HESAP VE QR TALEPLERİNİ GÖSTER
@@ -482,7 +483,12 @@ if (talep.status !== "pending") {
   alert("Bu ödeme talebi zaten işlenmiş veya beklemede değil.");
   return;
 }
+if (qrOnayIslemleri.has(id)) {
+  alert("Bu ödeme talebi için işlem zaten devam ediyor.");
+  return;
+}
 
+qrOnayIslemleri.add(id);
   const tutar = Number(talep.amount || 0);
 
   if (!Number.isFinite(tutar) || tutar <= 0) {
