@@ -366,9 +366,17 @@ function orderAmount(o) {
 }
 
 function paidAmount() {
+  const acikSiparisler = activeOrders();
+  const acikSiparisIds = new Set(acikSiparisler.map(o => o.id));
+
   return confirmedPayments
-    .filter(p => p.status === "confirmed")
-    .reduce((s,p) => s + Number(p.amount || 0), 0);
+    .filter(p => {
+      if (p.status !== "confirmed") return false;
+      if (!Array.isArray(p.orderIds)) return false;
+
+      return p.orderIds.some(id => acikSiparisIds.has(String(id)));
+    })
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 }
 
 function renderAccount() {
